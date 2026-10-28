@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matrices de Riesgo · Uninorte</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23CB333B'/%3E%3Ctext x='32' y='43' font-family='Arial Black,Arial,sans-serif' font-size='27' font-weight='900' fill='white' text-anchor='middle'%3EUN%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Albert+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rojo:#CB333B;
+  --rojo-hondo:#9e2129;
+  --amarillo:#FFCD00;
+  --negro:#161616;
+  --fondo:#f6f4f2;
+  --panel:#ffffff;
+  --texto:#161616;
+  --suave:#6b6660;
+  --linea:#e6e1dc;
+  --ok:#1b7f4b;
+  --pronto:#b57f00;
+  --vencida:#CB333B;
+  --pendiente:#8a8279;
+  --r:14px;
+  --sombra:0 1px 2px rgba(22,22,22,.05), 0 8px 24px -8px rgba(22,22,22,.14);
+  --t:.38s cubic-bezier(.22,.9,.3,1);
+}
+:root[data-tema="oscuro"]{
+  --fondo:#121110;
+  --panel:#1d1b1a;
+  --texto:#f3efec;
+  --suave:#a39d96;
+  --linea:#2f2c2a;
+  --ok:#49c585;
+  --pronto:#f0c14b;
+  --vencida:#ff7a82;
+  --pendiente:#8d867e;
+  --sombra:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -10px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--fondo);color:var(--texto);
+  font-family:"Albert Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  line-height:1.5;-webkit-font-smoothing:antialiased;
+}
+.caja{max-width:1240px;margin:0 auto;padding:0 20px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.negra{font-family:"Archivo Black","Albert Sans",sans-serif;font-weight:400;letter-spacing:-.015em}
+
+/* ---------- Barra superior ---------- */
+.barra{
+  background:linear-gradient(104deg,var(--rojo-hondo) 0%,var(--rojo) 42%,#dd4a52 100%);
+  color:#fff;position:relative;overflow:hidden;
+}
+.barra::after{
+  content:"";position:absolute;right:-90px;top:-130px;width:330px;height:330px;
+  border-radius:50%;background:rgba(255,205,0,.16);pointer-events:none;
+}
+.barra-fila{display:flex;align-items:center;gap:16px;padding:15px 0;position:relative;z-index:1;flex-wrap:wrap}
+.marca{display:flex;align-items:center;gap:13px;min-width:0}
+#logo{height:34px;width:132px;flex:none;display:flex;align-items:center}
+#logo.con-logo{
+  -webkit-mask:url("logo-uninorte.png") no-repeat left center/contain;
+          mask:url("logo-uninorte.png") no-repeat left center/contain;
+  background-color:#fff;
+}
+#logo.con-logo .respaldo{visibility:hidden}
+.respaldo{font-family:"Archivo Black",sans-serif;font-size:1.22rem;letter-spacing:-.02em;white-space:nowrap}
+.marca-linea{width:1px;height:30px;background:rgba(255,255,255,.32);flex:none}
+.marca-txt{font-size:.78rem;line-height:1.25;opacity:.93;font-weight:500}
+.marca-txt b{display:block;font-weight:700;font-size:.84rem}
+.barra-der{margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+
+#estado{
+  font-size:.73rem;font-weight:600;letter-spacing:.02em;
+  background:rgba(255,255,255,.17);border:1px solid rgba(255,255,255,.26);
+  padding:6px 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+}
+.punto{width:7px;height:7px;border-radius:50%;background:#7bf0a8;flex:none}
+#estado.vivo .punto{animation:latir 2s ease-in-out infinite}
+#estado.local .punto{background:var(--amarillo);animation:none}
+@keyframes latir{0%,100%{box-shadow:0 0 0 0 rgba(123,240,168,.75)}70%{box-shadow:0 0 0 7px rgba(123,240,168,0)}}
+
+.btn{
+  border:0;border-radius:10px;padding:9px 15px;font-size:.84rem;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:transform .12s ease,filter .18s ease,background .18s ease;
+}
+.btn:hover{filter:brightness(1.07)}
+.btn:active{transform:scale(.96)}
+.btn:focus-visible{outline:3px solid var(--amarillo);outline-offset:2px}
+.btn-fantasma{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.3)}
+.btn-amarillo{background:var(--amarillo);color:#2e2300}
+.btn-rojo{background:var(--rojo);color:#fff}
+.btn-plano{background:transparent;color:var(--texto);border:1px solid var(--linea)}
+.btn-peligro{background:transparent;color:var(--vencida);border:1px solid var(--linea)}
+.btn-xs{padding:7px 11px;font-size:.76rem;border-radius:9px}
+.icono{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;
+  width:36px;height:36px;border-radius:10px;display:grid;place-items:center;cursor:pointer;font-size:1rem;
+  transition:transform .12s ease,filter .18s}
+.icono:hover{filter:brightness(1.1)} .icono:active{transform:scale(.92)}
+
+/* ---------- Resumen ---------- */
+.resumen{padding:26px 0 6px}
+.saludo{font-size:1.72rem;margin:0 0 4px;line-height:1.18}
+.saludo span{color:var(--rojo)}
+:root[data-tema="oscuro"] .saludo span{color:#ff8d94}
+.sub-saludo{margin:0 0 18px;color:var(--suave);font-size:.95rem;max-width:62ch}
+
+.avance{background:var(--panel);border:1px solid var(--linea);border-radius:var(--r);
+  padding:17px 19px;box-shadow:var(--sombra);margin-bottom:14px}
+.avance-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:11px;flex-wrap:wrap}
+.avance-top h2{margin:0;font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--suave);font-weight:700}
+.avance-cifra{font-size:.86rem;color:var(--suave)}
+.avance-cifra b{color:var(--texto);font-size:1.02rem}
+.riel{height:11px;border-radius:999px;background:var(--linea);overflow:hidden;display:flex}
+.riel i{display:block;height:100%;width:0;transition:width 1.1s cubic-bezier(.3,1,.4,1)}
+.riel .lleno{background:var(--ok)}
+.riel .medio{background:var(--amarillo)}
+.leyenda-riel{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:.78rem;color:var(--suave)}
+.leyenda-riel i{width:9px;height:9px;border-radius:3px;display:inline-block;margin-right:6px}
+
+.fichas{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.ficha{background:var(--panel);border:1px solid var(--linea);border-radius:var(--r);padding:15px 16px;
+  box-shadow:var(--sombra);cursor:pointer;text-align:left;font-family:inherit;color:inherit;
+  transition:transform var(--t),border-color .2s,box-shadow .2s;position:relative;overflow:hidden}
+.ficha::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,var(--linea))}
+.ficha:hover{transform:translateY(-3px);border-color:var(--c,var(--linea))}
+.ficha.activa{border-color:var(--c);box-shadow:0 0 0 2px var(--c) inset,var(--sombra)}
+.ficha b{display:block;font-family:"Archivo Black",sans-serif;font-size:1.72rem;line-height:1;color:var(--c,var(--texto))}
+.ficha small{display:block;margin-top:5px;font-size:.78rem;color:var(--suave);font-weight:600;letter-spacing:.01em}
+
+/* ---------- Buscador ---------- */
+.herramientas{position:sticky;top:0;z-index:20;background:var(--fondo);
+  padding:12px 0 10px;border-bottom:1px solid transparent;transition:border-color .2s,box-shadow .2s}
+.herramientas.pegada{border-color:var(--linea);box-shadow:0 6px 18px -14px rgba(0,0,0,.5)}
+.buscar{position:relative;margin-bottom:11px}
+.buscar input{
+  width:100%;padding:15px 16px 15px 46px;font-size:1rem;font-family:inherit;color:var(--texto);
+  border:1.5px solid var(--linea);border-radius:12px;background:var(--panel);box-shadow:var(--sombra);
+  transition:border-color .2s,box-shadow .2s}
+.buscar input::placeholder{color:var(--suave)}
+.buscar input:focus{outline:none;border-color:var(--rojo);box-shadow:0 0 0 4px rgba(203,51,59,.13)}
+.buscar .lupa{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--suave);pointer-events:none}
+.limpiar{position:absolute;right:11px;top:50%;transform:translateY(-50%);border:0;background:var(--linea);
+  color:var(--texto);width:26px;height:26px;border-radius:50%;cursor:pointer;display:none;font-size:.9rem;line-height:1}
+.limpiar.ver{display:block}
+
+.filtros{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.grupo{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.grupo .eti{font-size:.7rem;text-transform:uppercase;letter-spacing:.09em;color:var(--suave);font-weight:700;margin-right:3px}
+.chip{border:1.5px solid var(--linea);background:var(--panel);color:var(--suave);border-radius:999px;
+  padding:6px 14px;font-size:.81rem;cursor:pointer;font-family:inherit;font-weight:600;
+  transition:transform .12s,background .18s,color .18s,border-color .18s}
+.chip:hover{border-color:var(--rojo);color:var(--texto)}
+.chip:active{transform:scale(.95)}
+.chip.on{background:var(--negro);border-color:var(--negro);color:#fff}
+:root[data-tema="oscuro"] .chip.on{background:#f3efec;border-color:#f3efec;color:#161616}
+select.orden{border:1.5px solid var(--linea);background:var(--panel);color:var(--texto);border-radius:999px;
+  padding:6px 12px;font-size:.81rem;font-family:inherit;font-weight:600;cursor:pointer}
+
+.conteo{font-size:.84rem;color:var(--suave);margin:16px 0 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.conteo b{color:var(--texto)}
+
+/* ---------- Tarjetas ---------- */
+.malla{display:grid;grid-template-columns:repeat(auto-fill,minmax(304px,1fr));gap:14px;padding-bottom:70px;align-items:start}
+.carta{
+  background:var(--panel);border:1px solid var(--linea);border-radius:var(--r);padding:0 0 15px;
+  box-shadow:var(--sombra);display:flex;flex-direction:column;overflow:hidden;position:relative;
+  transition:transform var(--t),box-shadow var(--t),border-color .2s;
+  animation:entrar .5s cubic-bezier(.22,.9,.3,1) backwards;
+}
+.carta:hover{transform:translateY(-4px);box-shadow:0 2px 4px rgba(22,22,22,.06),0 16px 36px -14px rgba(22,22,22,.28)}
+@keyframes entrar{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.cinta{height:5px;background:var(--c)}
+.carta-cuerpo{padding:15px 17px 0;display:flex;flex-direction:column;gap:9px;flex:1}
+.fila-eti{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.eti-estado{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  padding:4px 9px;border-radius:7px;color:#fff;background:var(--c)}
+.eti-tipo{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  padding:4px 9px;border-radius:7px;background:var(--linea);color:var(--suave)}
+.carta h3{margin:0;font-size:1.06rem;font-weight:700;line-height:1.28;letter-spacing:-.01em}
+.meta{font-size:.84rem;color:var(--suave);display:flex;flex-direction:column;gap:3px}
+.meta b{color:var(--texto);font-weight:600}
+
+/* nota de fecha de actualización */
+.nota-fecha{
+  display:flex;align-items:flex-start;gap:9px;border-radius:10px;padding:9px 11px;
+  background:var(--f-fondo);border:1px solid var(--f-borde);margin-top:2px;
+}
+.nota-fecha .cara{font-size:.95rem;line-height:1.2;flex:none}
+.nota-fecha .txt{font-size:.79rem;line-height:1.35}
+.nota-fecha .txt b{display:block;font-size:.84rem;font-weight:700;color:var(--f-color)}
+.nota-fecha .txt span{color:var(--suave)}
+.f-ok{--f-fondo:rgba(27,127,75,.09);--f-borde:rgba(27,127,75,.22);--f-color:var(--ok)}
+.f-pronto{--f-fondo:rgba(255,205,0,.16);--f-borde:rgba(181,127,0,.28);--f-color:var(--pronto)}
+.f-vencida{--f-fondo:rgba(203,51,59,.1);--f-borde:rgba(203,51,59,.26);--f-color:var(--vencida)}
+.f-sin{--f-fondo:transparent;--f-borde:var(--linea);--f-color:var(--suave)}
+
+.obs{font-size:.83rem;color:var(--suave);background:var(--fondo);border-radius:9px;padding:9px 11px}
+.acciones{display:flex;gap:7px;flex-wrap:wrap;padding:13px 17px 0;margin-top:auto}
+a.btn{text-decoration:none;display:inline-block}
+
+.vacio{text-align:center;padding:72px 20px;color:var(--suave);grid-column:1/-1}
+.vacio .cara{font-size:2.4rem;display:block;margin-bottom:10px}
+.vacio h3{color:var(--texto);margin:0 0 6px;font-size:1.1rem}
+
+/* ---------- Modales ---------- */
+.telon{position:fixed;inset:0;background:rgba(14,12,11,.6);backdrop-filter:blur(3px);
+  display:none;align-items:flex-start;justify-content:center;padding:26px 16px;overflow-y:auto;z-index:60}
+.telon.abierto{display:flex;animation:aparecer .22s ease}
+@keyframes aparecer{from{opacity:0}to{opacity:1}}
+.caja-modal{background:var(--panel);border-radius:18px;width:100%;max-width:640px;padding:25px;
+  box-shadow:0 24px 70px -20px rgba(0,0,0,.5);animation:subir .3s cubic-bezier(.22,.9,.3,1)}
+@keyframes subir{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+.caja-modal.angosta{max-width:412px}
+.caja-modal h2{margin:0 0 5px;font-size:1.22rem;font-family:"Archivo Black",sans-serif;font-weight:400}
+.caja-modal .pie-txt{margin:0 0 19px;font-size:.88rem;color:var(--suave)}
+.campo{margin-bottom:13px}
+.campo label{display:block;font-size:.76rem;font-weight:700;margin-bottom:5px;color:var(--suave);
+  text-transform:uppercase;letter-spacing:.05em}
+.campo input,.campo select,.campo textarea{width:100%;padding:11px 12px;border:1.5px solid var(--linea);
+  border-radius:10px;font-family:inherit;font-size:.93rem;background:var(--fondo);color:var(--texto)}
+.campo input:focus,.campo select:focus,.campo textarea:focus{outline:none;border-color:var(--rojo);
+  box-shadow:0 0 0 3px rgba(203,51,59,.12)}
+.campo textarea{resize:vertical;min-height:66px}
+.campo .ayuda{font-size:.76rem;color:var(--suave);margin:5px 0 0}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.pie{display:flex;gap:9px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.error{font-size:.85rem;color:var(--vencida);margin-top:9px;display:none;font-weight:600}
+.error.ver{display:block}
+.temblar{animation:temblor .42s}
+@keyframes temblor{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+
+footer{border-top:1px solid var(--linea);padding:24px 0 40px;color:var(--suave);font-size:.8rem}
+footer b{color:var(--texto)}
+
+@media (max-width:860px){ .fichas{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:560px){
+  .saludo{font-size:1.38rem}
+  .dos{grid-template-columns:1fr}
+  .marca-linea,.marca-txt{display:none}
+  .barra-der{width:100%;margin-left:0}
+  .malla{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+
+<div class="barra">
+  <div class="caja barra-fila">
+    <div class="marca">
+      <div id="logo"><span class="respaldo">UNINORTE</span></div>
+      <div class="marca-linea"></div>
+      <div class="marca-txt">
+        <b>Gestión Humana</b>
+        Seguridad y Salud en el Trabajo
+      </div>
+    </div>
+    <div class="barra-der">
+      <span id="estado" class="local"><span class="punto"></span><span id="estado-txt">Conectando…</span></span>
+      <button class="btn btn-fantasma btn-xs" id="btnModo">Modo edición</button>
+      <button class="btn btn-amarillo btn-xs" id="btnNueva" style="display:none">+ Nueva matriz</button>
+      <button class="icono" id="btnTema" title="Cambiar entre modo claro y oscuro" aria-label="Cambiar tema">◐</button>
+    </div>
+  </div>
+</div>
+
+<main class="caja">
+  <section class="resumen">
+    <h1 class="saludo negra" id="saludo">Hola</h1>
+    <p class="sub-saludo" id="subSaludo"></p>
+
+    <div class="avance">
+      <div class="avance-top">
+        <h2>Actualización de las matrices de la sede</h2>
+        <span class="avance-cifra"><b id="cifraTotal">0</b> matrices · <b id="cifraAct">0</b> actualizadas</span>
+      </div>
+      <div class="riel"><i class="lleno" id="rielLleno"></i><i class="medio" id="rielMedio"></i></div>
+      <div class="leyenda-riel">
+        <span><i style="background:var(--ok)"></i>Al día</span>
+        <span><i style="background:var(--amarillo)"></i>Próxima a vencer</span>
+        <span><i style="background:var(--linea)"></i>Vencida o sin fecha</span>
+      </div>
+    </div>
+
+    <div class="fichas" id="fichas"></div>
+  </section>
+
+  <div class="herramientas" id="herramientas">
+    <div class="buscar">
+      <svg class="lupa" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+      <input type="search" id="q" placeholder="Busca un laboratorio o un ambiente…" autocomplete="off" aria-label="Buscar matriz">
+      <button class="limpiar" id="limpiar" aria-label="Limpiar búsqueda">✕</button>
+    </div>
+    <div class="filtros">
+      <div class="grupo" id="fTipo"><span class="eti">Tipo</span></div>
+      <div class="grupo" id="fEstado"><span class="eti">Estado</span></div>
+      <div class="grupo">
+        <span class="eti">Orden</span>
+        <select class="orden" id="orden">
+          <option value="nombre">Nombre (A–Z)</option>
+          <option value="antiguas">Más desactualizadas primero</option>
+          <option value="pendientes">Pendientes primero</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <p class="conteo" id="conteo"></p>
+  <div class="malla" id="malla"></div>
+</main>
+
+<footer>
+  <div class="caja">
+    <p style="margin:0 0 5px">La identificación de peligros y la valoración de riesgos <b>se actualiza como mínimo una vez al año</b>, y cada vez que cambie un proceso, se incorpore maquinaria nueva o ocurra un accidente. Las fichas en rojo llevan más de 12 meses sin actualizar.</p>
+    <p style="margin:0">Gestión Humana · Seguridad y Salud en el Trabajo · Universidad del Norte</p>
+  </div>
+</footer>
+
+<!-- Modal clave -->
+<div class="telon" id="mClave">
+  <div class="caja-modal angosta" id="cajaClave">
+    <h2>Modo edición</h2>
+    <p class="pie-txt">Escribe la clave del equipo de SST para crear, actualizar o borrar matrices.</p>
+    <div class="campo">
+      <label for="clave">Clave de edición</label>
+      <input type="password" id="clave" autocomplete="current-password">
+    </div>
+    <p class="error" id="errClave"></p>
+    <div class="pie">
+      <button class="btn btn-plano" data-cerrar>Cancelar</button>
+      <button class="btn btn-rojo" id="btnEntrar">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ficha -->
+<div class="telon" id="mFicha">
+  <div class="caja-modal" id="cajaFicha">
+    <h2 id="tituloFicha">Nueva matriz</h2>
+    <p class="pie-txt">Solo el nombre es obligatorio. Lo demás se puede completar después.</p>
+    <div class="campo">
+      <label for="f_nombre">Nombre del laboratorio o ambiente</label>
+      <input type="text" id="f_nombre" placeholder="Laboratorio de Biotecnología">
+    </div>
+    <div class="dos">
+      <div class="campo">
+        <label for="f_tipo">Tipo</label>
+        <select id="f_tipo"><option>Laboratorio</option><option>Ambiente</option></select>
+      </div>
+      <div class="campo">
+        <label for="f_estado">Estado</label>
+        <select id="f_estado">
+          <option>Publicada</option><option>Sin enlace</option><option>Pendiente</option>
+        </select>
+      </div>
+    </div>
+    <div class="dos">
+      <div class="campo">
+        <label for="f_fecha">Fecha de actualización</label>
+        <input type="date" id="f_fecha">
+        <p class="ayuda">La fecha de la última revisión de la matriz, no la de hoy.</p>
+      </div>
+      <div class="campo">
+        <label for="f_version">Versión</label>
+        <input type="text" id="f_version" placeholder="V.02">
+      </div>
+    </div>
+    <div class="campo">
+      <label for="f_enlace">Enlace a la matriz (SharePoint / OneDrive)</label>
+      <input type="url" id="f_enlace" placeholder="https://uninorte-my.sharepoint.com/...">
+    </div>
+    <div class="dos">
+      <div class="campo"><label for="f_responsable">Responsable del área</label><input type="text" id="f_responsable"></div>
+      <div class="campo"><label for="f_ubicacion">Ubicación</label><input type="text" id="f_ubicacion" placeholder="Bloque K · piso 2"></div>
+    </div>
+    <div class="campo"><label for="f_nota">Observación</label><textarea id="f_nota" placeholder="Peligro principal, pendiente por revisar, nombre del archivo…"></textarea></div>
+    <div class="campo">
+      <label for="f_archivo">O sube el archivo aquí (Excel o PDF)</label>
+      <input type="file" id="f_archivo" accept=".xlsx,.xls,.pdf,.csv">
+      <p class="ayuda" id="archivoActual">Úsalo solo si la matriz no está en SharePoint. Si subes un archivo, cualquiera con el link podrá descargarlo sin iniciar sesión.</p>
+    </div>
+    <p class="error" id="errFicha"></p>
+    <div class="pie">
+      <button class="btn btn-plano" data-cerrar>Cancelar</button>
+      <button class="btn btn-rojo" id="btnGuardar">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+const CFG = window.MATRICES_CONFIG || {};
+const TABLA = "matrices";
+const BUCKET = CFG.bucket || "matrices";
+const MESES_LIMITE = CFG.mesesVigencia || 12;
+
+let sb = null, enLinea = false, edicion = false, datos = [], editandoId = null;
+let fTipo = "Todos", fEstado = "Todos";
+
+const $ = s => document.querySelector(s);
+
+/* ---------- Listado base del área (también sirve sin conexión) ---------- */
+const BASE = [
+ {
+ "nombre": "Morfologia",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQAySKMo411FQ4t0thKP4d5bAcFIns4vkaH2APRtp8JqekI?e=uLqe3F",
+ "nota": null
+ },
+ {
+ "nombre": "Inmunologia",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQCz9u1QjiF_R4IcSlcvyiOLATFosr0c5Mdfj1HqE58OD9I?e=KCDWHx",
+ "nota": null
+ },
+ {
+ "nombre": "Enfermedades tropicales",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQDpM2qwweoRTYfcnl6ZgvkcAbEGYOmunXzTP-xO6Jc5DUE?e=4F52aV",
+ "nota": null
+ },
+ {
+ "nombre": "Urologia",
+ "tipo": "Laboratorio",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Citometria",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQDMXGOMHTIiTptX4Hzgh-faAcW39xdXjFvJ6y956Orc6W8?e=e3mhzh",
+ "nota": null
+ },
+ {
+ "nombre": "Unidad genetica",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQAREp5pvxSaQbEoiEDiFywyAVuh8ZFf2UbZEEfERs1IKGE?e=6qqHfj",
+ "nota": null
+ },
+ {
+ "nombre": "Unidad de genetica II",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQD05Yrv6odQSKbtfcmKLbi9AVH2-_k4wd-ZRwaDuzAQoxc?e=PG9DZV",
+ "nota": null
+ },
+ {
+ "nombre": "Unidad BSL 3",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQDquER3TezhTItGuJYWkWXxATxDtvPaQEZxJUXJFzjivrg?e=kIQyDH",
+ "nota": null
+ },
+ {
+ "nombre": "Seologia y proteomica",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQBBlGOp4jHoSKxhK6LQhWLLAXdlwZnn5SnDbjSIpTLyUSI?e=7lA2b3",
+ "nota": null
+ },
+ {
+ "nombre": "Biologia molecular",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQA4ujEf23XpSIhtSCWHBFovAdEZEyYAfjLfFts-ZAg-J2Y?e=ldB6H9",
+ "nota": null
+ },
+ {
+ "nombre": "Rayos x odontologicos",
+ "tipo": "Laboratorio",
+ "estado": "Sin enlace",
+ "enlace": null,
+ "nota": "Archivo en el computador del área: MATRIZ LAB. RAYOS X ODONTOLOGICO.xlsx"
+ },
+ {
+ "nombre": "Multifuncional de materiales",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQA9l2UKgf9KRo_iQo4vbCoMARpQAj4JygV1mvnTR9AVZWk?e=a4607f",
+ "nota": null
+ },
+ {
+ "nombre": "Precilinica odontologica",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQAmQOOlgiteS7kqaIEGDooyAZg_sx1hOu2s0Z2cmLhlSMc?e=DgGb9m",
+ "nota": null
+ },
+ {
+ "nombre": "Simulacion",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQCfrw08-ximTYpxNu6zaSGRAcXYVvGN8PyA-CNTgl3hCr4?e=Or2dcq",
+ "nota": null
+ },
+ {
+ "nombre": "prototipado",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQDVayEc69iDRZXOnxTTGykgAbn3T8m7xyip-I1ImNualSk?e=UHHUkU",
+ "nota": null
+ },
+ {
+ "nombre": "Ensayo de materiales",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQBEt90QjPmjT6x96RF-tB9DAaSylvhBcRZ2Mu-ve9HnSiE?e=cF2P97",
+ "nota": null
+ },
+ {
+ "nombre": "Metalografia",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQAwixJr-oSRRpfBjBfesupyAVAAPzh8VnunenpExV3qpC8?e=HRCPTR",
+ "nota": "Revisar el enlace: es el mismo de Microscopia electronica y Tratamientos termicos."
+ },
+ {
+ "nombre": "Microscopia electronica",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQAwixJr-oSRRpfBjBfesupyAVAAPzh8VnunenpExV3qpC8?e=HRCPTR",
+ "nota": "Revisar el enlace: es el mismo de Metalografia y Tratamientos termicos."
+ },
+ {
+ "nombre": "Tratamientos termicos",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQAwixJr-oSRRpfBjBfesupyAVAAPzh8VnunenpExV3qpC8?e=HRCPTR",
+ "nota": "Revisar el enlace: es el mismo de Metalografia y Microscopia electronica."
+ },
+ {
+ "nombre": "Investigacion corrosion",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQD4FQtz-8XzQ74rM5oakvPzAebHZSZOzT-7h__DFfaKXU0?e=LGMotp",
+ "nota": null
+ },
+ {
+ "nombre": "Materiales de ingeneria",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQBZdR2MlF0XQ4sc1jMevl9YAUXI7r85nzJ2S5JPPwBliL8?e=5uXwr3",
+ "nota": null
+ },
+ {
+ "nombre": "Soldadura",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQCg-0hAt7K-SoFPOzaX1QxdAbpWBMLMHQ_xIbfcyI79lmo?e=ylUL5U",
+ "nota": null
+ },
+ {
+ "nombre": "Manofactura",
+ "tipo": "Laboratorio",
+ "estado": "Sin enlace",
+ "enlace": null,
+ "nota": "Archivo en el computador del área: MATRIZ LAB.MANUFACTURA.xlsx"
+ },
+ {
+ "nombre": "Biocombustible",
+ "tipo": "Laboratorio",
+ "estado": "Sin enlace",
+ "enlace": null,
+ "nota": "Archivo en el computador del área: MATRIZ LAB BIOCOMBUSTIBLE.xlsx"
+ },
+ {
+ "nombre": "Biotecnologia",
+ "tipo": "Laboratorio",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Centro de medicion de coordenadas",
+ "tipo": "Laboratorio",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Geotecnia y materiales de contruccion",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQDcc63zdWIlSbzh4KnxvAd0AXYJY9xZAN4h_fsmuO7uUrI?e=NaiqpK",
+ "nota": null
+ },
+ {
+ "nombre": "Hidraulica e Ing Ambiental",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQCbnhhly-m4S6m7LF9_FdN_AVtE6pZV_UN2xXdIMYOpFpw?e=RuUTLo",
+ "nota": null
+ },
+ {
+ "nombre": "Higiene y seguridad",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQB-zrTuNH6YSab_FpDnsVQLAWwp8yuxScRIybOC7DCWI6s?e=26m9D5",
+ "nota": null
+ },
+ {
+ "nombre": "Mecanica computacional (Verificar)",
+ "tipo": "Laboratorio",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Mecatronica",
+ "tipo": "Laboratorio",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Mediciones y control",
+ "tipo": "Laboratorio",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Mecanica de maquinas y diseño",
+ "tipo": "Laboratorio",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Operaciones y logistica",
+ "tipo": "Laboratorio",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Robotica industrial",
+ "tipo": "Laboratorio",
+ "estado": "Sin enlace",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Termofluidos",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQBpgGqS6EFKQI3a91c0eOZYAcwQvpkDltgdcB2MfjVSKRQ?e=0CDgaR",
+ "nota": null
+ },
+ {
+ "nombre": "Pedagogía infantil",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQAclTuZx6pySJEiB6VK6DUVAavq20tuGxIwOM_Lr_x9Pu4?e=uwvItF",
+ "nota": null
+ },
+ {
+ "nombre": "Petrografia",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQCh99ATCjEzRLkBw3LpH9eOATLDeJWWXrf1w8j56OnwEPU?e=QF7tUC",
+ "nota": null
+ },
+ {
+ "nombre": "Geoquimica",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQCF9Zf9AzhYTJsM4_8DNnThAZxAmsC861DN11HcFmMvqzE?e=lsQG70",
+ "nota": "Revisar el enlace: es el mismo de Preparacion de muestras y Geologia fisica y Diseño industrial y Biologia."
+ },
+ {
+ "nombre": "Preparacion de muestras",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQCF9Zf9AzhYTJsM4_8DNnThAZxAmsC861DN11HcFmMvqzE?e=lsQG70",
+ "nota": "Revisar el enlace: es el mismo de Geoquimica y Geologia fisica y Diseño industrial y Biologia."
+ },
+ {
+ "nombre": "Geologia fisica",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQCF9Zf9AzhYTJsM4_8DNnThAZxAmsC861DN11HcFmMvqzE?e=lsQG70",
+ "nota": "Revisar el enlace: es el mismo de Geoquimica y Preparacion de muestras y Diseño industrial y Biologia."
+ },
+ {
+ "nombre": "Diseño industrial",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQCF9Zf9AzhYTJsM4_8DNnThAZxAmsC861DN11HcFmMvqzE?e=lsQG70",
+ "nota": "Revisar el enlace: es el mismo de Geoquimica y Preparacion de muestras y Geologia fisica y Biologia."
+ },
+ {
+ "nombre": "Biologia",
+ "tipo": "Laboratorio",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQCF9Zf9AzhYTJsM4_8DNnThAZxAmsC861DN11HcFmMvqzE?e=lsQG70",
+ "nota": "Revisar el enlace: es el mismo de Geoquimica y Preparacion de muestras y Geologia fisica y Diseño industrial."
+ },
+ {
+ "nombre": "Administrativo",
+ "tipo": "Ambiente",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQCkkmmslxlbRouhorYhu1K3AWYs9Is58-mK4qxe2LjczUE?e=46kqdq",
+ "nota": null
+ },
+ {
+ "nombre": "Docente",
+ "tipo": "Ambiente",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQBsOM4EYJsQRqe2yA31MOVfAV-xLrH4_2FQOgRud-3KHoM?e=cIgav2",
+ "nota": null
+ },
+ {
+ "nombre": "Seguridad fisica",
+ "tipo": "Ambiente",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Servicios generales",
+ "tipo": "Ambiente",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Mantenimiento",
+ "tipo": "Ambiente",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Le salon",
+ "tipo": "Ambiente",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQAnGkz46q9UTYyjC5OdevQ7AeGhy75PTIeamZU-RnitH2U?e=UmM3Fz",
+ "nota": null
+ },
+ {
+ "nombre": "Psicina",
+ "tipo": "Ambiente",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQBrrRteLsy1RqIP7yEdIv7eAe0rtJG22az-mykCM3NKEA0?e=7T4Jnj",
+ "nota": "Revisar el enlace: es el mismo de Boca de ceniza y Du nord cafe."
+ },
+ {
+ "nombre": "Boca de ceniza",
+ "tipo": "Ambiente",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQBrrRteLsy1RqIP7yEdIv7eAe0rtJG22az-mykCM3NKEA0?e=7T4Jnj",
+ "nota": "Revisar el enlace: es el mismo de Psicina y Du nord cafe."
+ },
+ {
+ "nombre": "Terrasa",
+ "tipo": "Ambiente",
+ "estado": "Sin enlace",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Du nord plaza",
+ "tipo": "Ambiente",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Du nord cafe",
+ "tipo": "Ambiente",
+ "estado": "Publicada",
+ "enlace": "https://uninorte-my.sharepoint.com/:x:/g/personal/aux_sst_uninorte_edu_co/IQBrrRteLsy1RqIP7yEdIv7eAe0rtJG22az-mykCM3NKEA0?e=7T4Jnj",
+ "nota": "Revisar el enlace: es el mismo de Psicina y Boca de ceniza."
+ },
+ {
+ "nombre": "Grafith",
+ "tipo": "Ambiente",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ },
+ {
+ "nombre": "Almacenes",
+ "tipo": "Ambiente",
+ "estado": "Pendiente",
+ "enlace": null,
+ "nota": null
+ }
+];
+
+const COLOR = { "Publicada":"var(--rojo)", "Sin enlace":"var(--amarillo)", "Pendiente":"var(--pendiente)" };
+
+/* ---------- Tema ---------- */
+const temaGuardado = (() => { try { return localStorage.getItem("tema-matrices"); } catch(e){ return null; } })();
+if (temaGuardado) document.documentElement.dataset.tema = temaGuardado;
+else if (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.dataset.tema = "oscuro";
+$("#btnTema").onclick = () => {
+  const nuevo = document.documentElement.dataset.tema === "oscuro" ? "claro" : "oscuro";
+  document.documentElement.dataset.tema = nuevo;
+  try { localStorage.setItem("tema-matrices", nuevo); } catch(e){}
+};
+
+/* ---------- Arranque ---------- */
+async function iniciar(){
+  if (CFG.supabaseUrl && CFG.supabaseKey && CFG.supabaseUrl.indexOf("XXXX") === -1) {
+    try {
+      sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
+      await cargar();
+      enLinea = true;
+      suscribir();
+      const { data } = await sb.auth.getSession();
+      if (data && data.session) activarEdicion();
+    } catch(e){ console.error(e); sinConexion(); }
+  } else sinConexion();
+
+  $("#estado").className = enLinea ? "vivo" : "local";
+  $("#estado-txt").textContent = enLinea ? "En vivo" : "Solo lectura (sin conexión)";
+  saludar(); construirFiltros(); pintar();
+}
+
+function sinConexion(){ enLinea = false; sb = null; datos = BASE.map((d,i) => Object.assign({ id:"base"+i }, d)); }
+
+async function cargar(){
+  const { data, error } = await sb.from(TABLA).select("*").order("nombre");
+  if (error) throw error;
+  datos = data || [];
+}
+
+function suscribir(){
+  sb.channel("matrices-vivo")
+    .on("postgres_changes", { event:"*", schema:"public", table:TABLA }, async () => {
+      try { await cargar(); saludar(); construirFiltros(); pintar(); } catch(e){ console.error(e); }
+    }).subscribe();
+}
+
+/* ---------- Saludo y avance ---------- */
+function saludar(){
+  const h = new Date().getHours();
+  const txt = h < 12 ? "¡Buenos días!" : h < 19 ? "¡Buenas tardes!" : "¡Buenas noches!";
+  const pub = datos.filter(d => d.estado === "Publicada").length;
+  const sin = datos.filter(d => d.estado === "Sin enlace").length;
+  const pend = datos.filter(d => d.estado === "Pendiente").length;
+  const venc = datos.filter(porActualizar).length;
+  const total = datos.length || 1;
+
+  const clases = datos.map(d => clasificar(d.fecha_actualizacion).clase);
+  const alDia = clases.filter(c => c === "f-ok").length;
+  const porVencer = clases.filter(c => c === "f-pronto").length;
+
+  $("#saludo").innerHTML = txt + " 👋 Aquí puede consultar <span>su matriz de riesgo</span>";
+  $("#subSaludo").textContent = "Escriba el nombre del laboratorio o del ambiente donde trabaja y abra su matriz.";
+
+  $("#cifraTotal").textContent = datos.length;
+  $("#cifraAct").textContent = alDia + porVencer;
+  requestAnimationFrame(() => {
+    $("#rielLleno").style.width = (alDia / total * 100) + "%";
+    $("#rielMedio").style.width = (porVencer / total * 100) + "%";
+  });
+
+  const tarjetas = [
+    { n: pub,  t: "Publicadas",      c: "var(--rojo)",       filtro: "Publicada" },
+    { n: sin,  t: "Sin enlace",      c: "var(--pronto)",     filtro: "Sin enlace" },
+    { n: pend, t: "Pendientes",      c: "var(--pendiente)",  filtro: "Pendiente" },
+    { n: venc, t: "Por actualizar",  c: "var(--vencida)", filtro: "__vencidas" }
+  ];
+  const cont = $("#fichas");
+  cont.innerHTML = "";
+  tarjetas.forEach(x => {
+    const b = document.createElement("button");
+    b.className = "ficha" + (fEstado === x.filtro ? " activa" : "");
+    b.style.setProperty("--c", x.c);
+    b.innerHTML = "<b class='mono'>" + x.n + "</b><small>" + x.t + "</small>";
+    b.onclick = () => { fEstado = (fEstado === x.filtro) ? "Todos" : x.filtro; construirFiltros(); saludar(); pintar(); };
+    cont.appendChild(b);
+  });
+}
+
+/* ---------- Fecha de actualización ---------- */
+function porActualizar(d){
+  if (d.estado === "Pendiente") return false;
+  const c = clasificar(d.fecha_actualizacion).clase;
+  return c === "f-vencida" || c === "f-sin";
+}
+function clasificar(f){
+  if (!f) return { clase:"f-sin", cara:"📋", titulo:"Sin fecha de actualización", detalle:"Nadie ha registrado cuándo se revisó por última vez.", meses:9999 };
+  const d = new Date(f + "T00:00:00");
+  if (isNaN(d)) return { clase:"f-sin", cara:"📋", titulo:"Fecha no válida", detalle:"", meses:9999 };
+  const hoy = new Date();
+  const meses = (hoy.getFullYear() - d.getFullYear()) * 12 + (hoy.getMonth() - d.getMonth());
+  const bonita = d.toLocaleDateString("es-CO", { day:"numeric", month:"long", year:"numeric" });
+  const hace = meses < 1 ? "este mes" : meses === 1 ? "hace 1 mes" : "hace " + meses + " meses";
+  if (meses >= MESES_LIMITE) return { clase:"f-vencida", cara:"⚠️", titulo:"Actualizada el " + bonita, detalle:"Lleva " + hace.replace("hace ","") + " sin revisión. Toca actualizarla.", meses };
+  if (meses >= MESES_LIMITE - 3) return { clase:"f-pronto", cara:"⏳", titulo:"Actualizada el " + bonita, detalle:"Se revisó " + hace + ". Programa la próxima revisión.", meses };
+  return { clase:"f-ok", cara:"✅", titulo:"Actualizada el " + bonita, detalle:"Revisada " + hace + ".", meses };
+}
+
+/* ---------- Filtros ---------- */
+function construirFiltros(){
+  chips("#fTipo", ["Todos","Laboratorio","Ambiente"], fTipo, v => { fTipo = v; construirFiltros(); pintar(); });
+  chips("#fEstado", ["Todos","Publicada","Sin enlace","Pendiente"], fEstado, v => { fEstado = v; construirFiltros(); saludar(); pintar(); });
+}
+function chips(sel, lista, activo, cb){
+  const c = $(sel);
+  c.querySelectorAll(".chip").forEach(x => x.remove());
+  lista.forEach(v => {
+    const b = document.createElement("button");
+    b.className = "chip" + (v === activo ? " on" : "");
+    b.textContent = v;
+    b.onclick = () => cb(v);
+    c.appendChild(b);
+  });
+}
+
+function esc(t){
+  return String(t == null ? "" : t).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+function filtrar(){
+  const q = $("#q").value.trim().toLowerCase();
+  let l = datos.filter(d => {
+    if (fTipo !== "Todos" && d.tipo !== fTipo) return false;
+    if (fEstado === "__vencidas") { if (!porActualizar(d)) return false; }
+    else if (fEstado !== "Todos" && d.estado !== fEstado) return false;
+    if (!q) return true;
+    return [d.nombre, d.responsable, d.ubicacion, d.nota, d.tipo, d.estado].filter(Boolean).join(" ").toLowerCase().includes(q);
+  });
+  const o = $("#orden").value;
+  const orden = { "Pendiente":0, "Sin enlace":1, "Publicada":2 };
+  if (o === "antiguas") l.sort((a,b) => clasificar(b.fecha_actualizacion).meses - clasificar(a.fecha_actualizacion).meses || a.nombre.localeCompare(b.nombre,"es"));
+  else if (o === "pendientes") l.sort((a,b) => (orden[a.estado] ?? 3) - (orden[b.estado] ?? 3) || a.nombre.localeCompare(b.nombre,"es"));
+  else l.sort((a,b) => a.nombre.localeCompare(b.nombre,"es"));
+  return l;
+}
+
+/* ---------- Pintado ---------- */
+function pintar(){
+  const lista = filtrar();
+  const malla = $("#malla");
+  malla.innerHTML = "";
+  $("#limpiar").className = "limpiar" + ($("#q").value ? " ver" : "");
+
+  const venc = lista.filter(porActualizar).length;
+  $("#conteo").innerHTML = "Mostrando <b>" + lista.length + "</b> de " + datos.length + " registros" +
+    (venc ? " · <b>" + venc + "</b> por actualizar" : "");
+
+  if (!lista.length) {
+    malla.innerHTML = '<div class="vacio"><span class="cara">🔍</span><h3>No hay resultados</h3><p>Prueba con otra palabra o quita los filtros.</p></div>';
+    return;
+  }
+
+  lista.forEach((d, i) => {
+    const f = d.estado === "Pendiente" && !d.fecha_actualizacion
+      ? { clase:"f-sin", cara:"🗓️", titulo:"Matriz por elaborar", detalle:"Todavía no se ha levantado la matriz de este espacio." }
+      : clasificar(d.fecha_actualizacion);
+    const c = document.createElement("article");
+    c.className = "carta";
+    c.style.setProperty("--c", COLOR[d.estado] || "var(--pendiente)");
+    c.style.animationDelay = Math.min(i * 28, 420) + "ms";
+    c.innerHTML =
+      '<div class="cinta"></div>' +
+      '<div class="carta-cuerpo">' +
+        '<div class="fila-eti">' +
+          '<span class="eti-estado">' + esc(d.estado) + '</span>' +
+          '<span class="eti-tipo">' + esc(d.tipo) + '</span>' +
+        '</div>' +
+        '<h3>' + esc(d.nombre) + '</h3>' +
+        '<div class="meta">' +
+          (d.ubicacion ? '<span>' + esc(d.ubicacion) + '</span>' : '') +
+          (d.responsable ? '<span>Responsable: <b>' + esc(d.responsable) + '</b></span>' : '') +
+          (d.version ? '<span class="mono">' + esc(d.version) + '</span>' : '') +
+        '</div>' +
+        '<div class="nota-fecha ' + f.clase + '">' +
+          '<span class="cara">' + f.cara + '</span>' +
+          '<span class="txt"><b>' + esc(f.titulo) + '</b><span>' + esc(f.detalle) + '</span></span>' +
+        '</div>' +
+        (d.nota ? '<p class="obs">' + esc(d.nota) + '</p>' : '') +
+      '</div>' +
+      '<div class="acciones"></div>';
+
+    const acc = c.querySelector(".acciones");
+    const destino = d.enlace || d.archivo_url;
+    if (destino) {
+      const a = document.createElement("a");
+      a.href = destino; a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.className = "btn btn-rojo btn-xs";
+      a.textContent = d.enlace ? "Abrir matriz ↗" : "Descargar matriz ↓";
+      acc.appendChild(a);
+    } else {
+      const s = document.createElement("span");
+      s.className = "eti-tipo";
+      s.textContent = d.estado === "Pendiente" ? "Aún no elaborada" : "Falta cargar el enlace";
+      acc.appendChild(s);
+    }
+    if (edicion) {
+      const e = document.createElement("button");
+      e.className = "btn btn-plano btn-xs"; e.textContent = "Editar";
+      e.onclick = () => abrirFicha(d);
+      const b = document.createElement("button");
+      b.className = "btn btn-peligro btn-xs"; b.textContent = "Borrar";
+      b.onclick = () => borrar(d);
+      acc.append(e, b);
+    }
+    malla.appendChild(c);
+  });
+}
+
+/* ---------- Modo edición ---------- */
+function activarEdicion(){
+  edicion = true;
+  $("#btnModo").textContent = "Salir de edición";
+  $("#btnNueva").style.display = "inline-block";
+  pintar();
+}
+async function salirEdicion(){
+  if (sb) { try { await sb.auth.signOut(); } catch(e){} }
+  edicion = false;
+  $("#btnModo").textContent = "Modo edición";
+  $("#btnNueva").style.display = "none";
+  pintar();
+}
+$("#btnModo").onclick = () => {
+  if (edicion) return salirEdicion();
+  if (!enLinea) { sacudir("#cajaClave"); return alert("La página está sin conexión a la base de datos. Revisa config.js."); }
+  $("#clave").value = "";
+  $("#errClave").classList.remove("ver");
+  abrir("#mClave");
+  setTimeout(() => $("#clave").focus(), 60);
+};
+$("#btnEntrar").onclick = async () => {
+  const err = $("#errClave");
+  const { error } = await sb.auth.signInWithPassword({ email: CFG.editorEmail, password: $("#clave").value });
+  if (error) {
+    err.textContent = "La clave no es correcta. Verifícala con el equipo de SST.";
+    err.classList.add("ver"); sacudir("#cajaClave"); return;
+  }
+  cerrar("#mClave"); activarEdicion();
+};
+$("#clave").addEventListener("keydown", e => { if (e.key === "Enter") $("#btnEntrar").click(); });
+
+/* ---------- Ficha ---------- */
+$("#btnNueva").onclick = () => abrirFicha(null);
+
+function abrirFicha(d){
+  editandoId = d ? d.id : null;
+  $("#tituloFicha").textContent = d ? "Editar matriz" : "Nueva matriz";
+  const v = (id, val) => { $(id).value = val || ""; };
+  v("#f_nombre", d && d.nombre);
+  $("#f_tipo").value   = (d && d.tipo)   || "Laboratorio";
+  $("#f_estado").value = (d && d.estado) || "Pendiente";
+  v("#f_fecha", d && d.fecha_actualizacion);
+  v("#f_version", d && d.version);
+  v("#f_enlace", d && d.enlace);
+  v("#f_responsable", d && d.responsable);
+  v("#f_ubicacion", d && d.ubicacion);
+  v("#f_nota", d && d.nota);
+  $("#f_archivo").value = "";
+  $("#errFicha").classList.remove("ver");
+  abrir("#mFicha");
+  setTimeout(() => $("#f_nombre").focus(), 60);
+}
+
+$("#btnGuardar").onclick = async () => {
+  const err = $("#errFicha");
+  const nombre = $("#f_nombre").value.trim();
+  if (!nombre) {
+    err.textContent = "Falta el nombre del laboratorio o ambiente.";
+    err.classList.add("ver"); sacudir("#cajaFicha"); $("#f_nombre").focus(); return;
+  }
+  const btn = $("#btnGuardar");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  try {
+    const fila = {
+      nombre,
+      tipo: $("#f_tipo").value,
+      estado: $("#f_estado").value,
+      fecha_actualizacion: $("#f_fecha").value || null,
+      version: $("#f_version").value.trim() || null,
+      enlace: $("#f_enlace").value.trim() || null,
+      responsable: $("#f_responsable").value.trim() || null,
+      ubicacion: $("#f_ubicacion").value.trim() || null,
+      nota: $("#f_nota").value.trim() || null
+    };
+    const archivo = $("#f_archivo").files[0];
+    if (archivo) {
+      const limpio = archivo.name.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-zA-Z0-9._-]/g,"_");
+      const ruta = Date.now() + "-" + limpio;
+      const sube = await sb.storage.from(BUCKET).upload(ruta, archivo, { upsert:false });
+      if (sube.error) throw sube.error;
+      fila.archivo_url = sb.storage.from(BUCKET).getPublicUrl(ruta).data.publicUrl;
+      fila.archivo_nombre = archivo.name;
+      fila.archivo_ruta = ruta;
+    }
+    const res = editandoId
+      ? await sb.from(TABLA).update(fila).eq("id", editandoId)
+      : await sb.from(TABLA).insert(fila);
+    if (res.error) throw res.error;
+    cerrar("#mFicha");
+    await cargar(); saludar(); construirFiltros(); pintar();
+  } catch(e) {
+    console.error(e);
+    err.textContent = "No se pudo guardar: " + (e.message || "error desconocido");
+    err.classList.add("ver"); sacudir("#cajaFicha");
+  } finally {
+    btn.disabled = false; btn.textContent = "Guardar";
+  }
+};
+
+async function borrar(d){
+  if (!confirm('¿Borrar el registro de "' + d.nombre + '"? No se puede deshacer.')) return;
+  try {
+    if (d.archivo_ruta) { try { await sb.storage.from(BUCKET).remove([d.archivo_ruta]); } catch(e){} }
+    const { error } = await sb.from(TABLA).delete().eq("id", d.id);
+    if (error) throw error;
+    await cargar(); saludar(); construirFiltros(); pintar();
+  } catch(e) { alert("No se pudo borrar: " + (e.message || "error desconocido")); }
+}
+
+/* ---------- Utilidades ---------- */
+function abrir(s){ $(s).classList.add("abierto"); }
+function cerrar(s){ $(s).classList.remove("abierto"); }
+function sacudir(s){ const el = $(s); el.classList.remove("temblar"); void el.offsetWidth; el.classList.add("temblar"); }
+document.querySelectorAll("[data-cerrar]").forEach(b => b.onclick = () => b.closest(".telon").classList.remove("abierto"));
+document.querySelectorAll(".telon").forEach(m => m.onclick = e => { if (e.target === m) m.classList.remove("abierto"); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") document.querySelectorAll(".telon.abierto").forEach(m => m.classList.remove("abierto"));
+  if (e.key === "/" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") {
+    e.preventDefault(); $("#q").focus();
+  }
+});
+$("#q").addEventListener("input", pintar);
+$("#orden").addEventListener("change", pintar);
+$("#limpiar").onclick = () => { $("#q").value = ""; $("#q").focus(); pintar(); };
+
+const centinela = document.createElement("div");
+document.querySelector(".resumen").after(centinela);
+new IntersectionObserver(([e]) => $("#herramientas").classList.toggle("pegada", !e.isIntersecting))
+  .observe(centinela);
+
+const probar = new Image();
+probar.onload = () => document.getElementById("logo").classList.add("con-logo");
+probar.src = "logo-uninorte.png";
+
+iniciar();
+})();
+</script>
+</body>
+</html>
