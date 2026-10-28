@@ -61,13 +61,10 @@ body{
 }
 .barra-fila{display:flex;align-items:center;gap:16px;padding:15px 0;position:relative;z-index:1;flex-wrap:wrap}
 .marca{display:flex;align-items:center;gap:13px;min-width:0}
-#logo{height:34px;width:132px;flex:none;display:flex;align-items:center}
-#logo.con-logo{
-  -webkit-mask:url("logo-uninorte.png") no-repeat left center/contain;
-          mask:url("logo-uninorte.png") no-repeat left center/contain;
-  background-color:#fff;
-}
-#logo.con-logo .respaldo{visibility:hidden}
+#logo{height:44px;flex:none;display:flex;align-items:center}
+#logo img{display:none;height:100%;width:auto;background:#fff;border-radius:10px;padding:6px 11px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+#logo.con-logo img{display:block}
+#logo.con-logo .respaldo{display:none}
 .respaldo{font-family:"Archivo Black",sans-serif;font-size:1.22rem;letter-spacing:-.02em;white-space:nowrap}
 .marca-linea{width:1px;height:30px;background:rgba(255,255,255,.32);flex:none}
 .marca-txt{font-size:.78rem;line-height:1.25;opacity:.93;font-weight:500}
@@ -256,7 +253,7 @@ footer b{color:var(--texto)}
 <div class="barra">
   <div class="caja barra-fila">
     <div class="marca">
-      <div id="logo"><span class="respaldo">UNINORTE</span></div>
+      <div id="logo"><img src="logo-uninorte.png" alt="Universidad del Norte"><span class="respaldo">UNINORTE</span></div>
       <div class="marca-linea"></div>
       <div class="marca-txt">
         <b>Gestión Humana</b>
@@ -320,7 +317,7 @@ footer b{color:var(--texto)}
 <footer>
   <div class="caja">
     <p style="margin:0 0 5px">La identificación de peligros y la valoración de riesgos <b>se actualiza como mínimo una vez al año</b>, y cada vez que cambie un proceso, se incorpore maquinaria nueva o ocurra un accidente. Las fichas en rojo llevan más de 12 meses sin actualizar.</p>
-    <p style="margin:0">Gestión Humana · Seguridad y Salud en el Trabajo · Universidad del Norte</p>
+    <p style="margin:0">Gestión Humana · Seguridad y Salud en el Trabajo · Universidad del Norte · <i>Vigilada Mineducación</i></p>
   </div>
 </footer>
 
