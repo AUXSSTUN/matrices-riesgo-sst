@@ -63,8 +63,8 @@ body{
 .marca{display:flex;align-items:center;gap:13px;min-width:0}
 #logo{height:34px;width:132px;flex:none;display:flex;align-items:center}
 #logo.con-logo{
-  -webkit-mask:url("logo-un.png") no-repeat left center/contain;
-          mask:url("logo-un.png") no-repeat left center/contain;
+  -webkit-mask:url("logo-uninorte.png") no-repeat left center/contain;
+          mask:url("logo-uninorte.png") no-repeat left center/contain;
   background-color:#fff;
 }
 #logo.con-logo .respaldo{visibility:hidden}
@@ -1155,7 +1155,7 @@ new IntersectionObserver(([e]) => $("#herramientas").classList.toggle("pegada", 
 
 const probar = new Image();
 probar.onload = () => document.getElementById("logo").classList.add("con-logo");
-probar.src = "logo-un.png";
+probar.src = "logo-uninorte.png";
 
 iniciar();
 })();
