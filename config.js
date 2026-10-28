@@ -13,14 +13,14 @@ window.MATRICES_CONFIG = {
 
   // 1. URL del proyecto de Supabase. SIN /rest/v1/ al final.
   //    Ejemplo: "https://abcdefghijklm.supabase.co"
-  supabaseUrl: "https://jzxuenojpzgyxwzgbkrd.supabase.co/rest/v1/",
+  supabaseUrl: "https://jzxuenojpzgyxwzgbkrd.supabase.co",
 
   // 2. Llave publishable (anon). Empieza por "sb_publishable_" o por "eyJ..."
   supabaseKey: "sb_publishable_DgDGZNKyqRVCVKOy4FIrYQ_49KKE4yv",
 
   // 3. Correo del usuario editor creado en Supabase > Authentication.
   //    La contraseña NO va aquí: es la clave que el equipo escribe en la app.
-  editorEmail: "aux_sst@uninorte.edu.co",
+  editorEmail: "permisotrabajosst_un@uninorte.edu.co",
 
   // 4. Cada cuántos meses una matriz se marca en rojo como vencida.
   //    12 meses es el periodo con el que se actualiza la identificación
