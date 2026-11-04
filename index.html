@@ -40,6 +40,7 @@
   --sombra:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -10px rgba(0,0,0,.6);
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth}
 body{
   margin:0;background:var(--fondo);color:var(--texto);
@@ -240,6 +241,38 @@ a.btn{text-decoration:none;display:inline-block}
 .fila-agregar{display:flex;gap:8px}
 .fila-agregar input{flex:1;min-width:0;padding:10px 12px;border:1.5px solid var(--linea);border-radius:10px;font-family:inherit;font-size:.93rem;background:var(--fondo);color:var(--texto)}
 .fila-agregar input:focus{outline:none;border-color:var(--rojo);box-shadow:0 0 0 3px rgba(203,51,59,.12)}
+/* ---------- Modos de búsqueda ---------- */
+.modos{display:inline-flex;flex-wrap:wrap;background:var(--panel);border:1px solid var(--linea);border-radius:13px;padding:4px;gap:4px;margin:0 0 6px;box-shadow:var(--sombra)}
+.modo{border:0;background:transparent;color:var(--suave);font-family:inherit;font-weight:700;font-size:.88rem;padding:9px 16px;border-radius:9px;cursor:pointer;transition:background .18s,color .18s}
+.modo:hover{color:var(--texto)}
+.modo.on{background:var(--rojo);color:#fff}
+.modo:focus-visible{outline:3px solid var(--amarillo);outline-offset:2px}
+.panel-cargo{padding:10px 0 70px}
+.pasos{list-style:none;display:flex;gap:8px;flex-wrap:wrap;padding:0;margin:0 0 14px}
+.paso{display:flex;align-items:center;gap:7px;font-size:.8rem;font-weight:700;color:var(--suave);background:var(--panel);border:1px solid var(--linea);border-radius:999px;padding:5px 13px 5px 5px}
+.paso span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--linea);color:var(--texto);font-size:.74rem}
+.paso.activo{color:var(--texto);border-color:var(--rojo)}
+.paso.activo span{background:var(--rojo);color:#fff}
+.paso.hecho span{background:var(--ok);color:#fff}
+.migas{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.miga{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:10px 14px}
+.miga .val{flex:1;min-width:0;font-weight:700;font-size:.93rem;overflow-wrap:anywhere}
+.miga .val small{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--suave);font-weight:700;margin-bottom:1px}
+.opciones{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px}
+.opcion{text-align:left;background:var(--panel);border:1.5px solid var(--linea);border-radius:11px;padding:11px 14px;font-family:inherit;color:var(--texto);
+  font-size:.87rem;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center;transition:border-color .15s,transform .12s}
+.opcion:hover{border-color:var(--rojo)}
+.opcion:active{transform:scale(.98)}
+.opcion:focus-visible{outline:3px solid var(--amarillo);outline-offset:1px}
+.opcion small{color:var(--suave);font-weight:600;white-space:nowrap;font-size:.74rem}
+.resultado{background:var(--panel);border:1px solid var(--linea);border-left:5px solid var(--rojo);border-radius:var(--r);box-shadow:var(--sombra);padding:18px 20px;margin-bottom:16px}
+.resultado h3{margin:0 0 5px;font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:var(--suave)}
+.resultado p{margin:0;color:var(--suave);font-size:.9rem}
+.resultado .tipologia{font-family:"Archivo Black","Albert Sans",sans-serif;font-size:1.7rem;line-height:1.15;color:var(--rojo);margin:0 0 6px}
+:root[data-tema="oscuro"] .resultado .tipologia{color:#ff8d94}
+.subtitulo-matriz{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--suave);font-weight:700;margin:18px 0 10px}
+.sin-matriz{background:var(--panel);border:1px dashed var(--linea);border-radius:12px;padding:14px 16px;font-size:.9rem;color:var(--suave);display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.acciones-cargo{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
 footer{border-top:1px solid var(--linea);padding:24px 0 40px;color:var(--suave);font-size:.8rem}
 footer b{color:var(--texto)}
 
@@ -300,6 +333,31 @@ footer b{color:var(--texto)}
     <div class="fichas" id="fichas"></div>
   </section>
 
+  <div class="modos" role="tablist" aria-label="Forma de búsqueda" id="modos">
+    <button class="modo on" id="modoArea" role="tab" aria-selected="true">Buscar por área</button>
+    <button class="modo" id="modoCargo" role="tab" aria-selected="false">Buscar por cargo</button>
+  </div>
+
+  <section class="panel-cargo" id="panelCargo" hidden>
+    <ol class="pasos">
+      <li class="paso" id="paso1"><span>1</span>Departamento</li>
+      <li class="paso" id="paso2"><span>2</span>Cargo</li>
+      <li class="paso" id="paso3"><span>3</span>Tipología de matriz</li>
+    </ol>
+    <div class="migas" id="migas"></div>
+    <div id="buscaCargo">
+      <div class="buscar">
+        <svg class="lupa" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+        <input type="search" id="qCargo" placeholder="Escriba el nombre de su departamento…" autocomplete="off" aria-label="Buscar departamento o cargo">
+        <button class="limpiar" id="limpiarCargo" aria-label="Limpiar búsqueda">✕</button>
+      </div>
+      <p class="conteo" id="conteoCargo"></p>
+      <div class="opciones" id="opciones"></div>
+    </div>
+    <div id="resultadoCargo"></div>
+  </section>
+
+  <div id="panelArea">
   <div class="herramientas" id="herramientas">
     <div class="buscar">
       <svg class="lupa" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
@@ -322,6 +380,7 @@ footer b{color:var(--texto)}
 
   <p class="conteo" id="conteo"></p>
   <div class="malla" id="malla"></div>
+  </div>
 </main>
 
 <footer>
@@ -424,6 +483,7 @@ footer b{color:var(--texto)}
 </div>
 
 <script src="config.js"></script>
+<script src="cargos.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
@@ -435,6 +495,8 @@ const BUCKET = CFG.bucket || "matrices";
 const MESES_LIMITE = CFG.mesesVigencia || 12;
 
 let sb = null, enLinea = false, edicion = false, datos = [], editandoId = null;
+let modo = "area", selDep = null, selCargo = null;
+const CARGOS = Array.isArray(window.CARGOS) ? window.CARGOS : [];
 let tiposDB = null; // lista de la tabla public.tipos; null si la tabla no existe
 let fTipo = "Todos", fEstado = "Todos";
 
@@ -931,7 +993,7 @@ function saludar(){
     b.className = "ficha" + (fEstado === x.filtro ? " activa" : "");
     b.style.setProperty("--c", x.c);
     b.innerHTML = "<b class='mono'>" + x.n + "</b><small>" + x.t + "</small>";
-    b.onclick = () => { fEstado = (fEstado === x.filtro) ? "Todos" : x.filtro; construirFiltros(); saludar(); pintar(); };
+    b.onclick = () => { if (modo !== "area") cambiarModo("area"); fEstado = (fEstado === x.filtro) ? "Todos" : x.filtro; construirFiltros(); saludar(); pintar(); };
     cont.appendChild(b);
   });
 }
@@ -1017,6 +1079,7 @@ function filtrar(){
 
 /* ---------- Pintado ---------- */
 function pintar(){
+  pintarCargo();
   const lista = filtrar();
   const malla = $("#malla");
   malla.innerHTML = "";
@@ -1031,7 +1094,10 @@ function pintar(){
     return;
   }
 
-  lista.forEach((d, i) => {
+  lista.forEach((d, i) => malla.appendChild(crearCarta(d, i)));
+}
+
+function crearCarta(d, i){
     const f = d.estado === "Pendiente" && !d.fecha_actualizacion
       ? { clase:"f-sin", cara:"🗓️", titulo:"Matriz por elaborar", detalle:"Todavía no se ha levantado la matriz de este espacio." }
       : clasificar(d.fecha_actualizacion);
@@ -1083,9 +1149,207 @@ function pintar(){
       b.onclick = () => borrar(d);
       acc.append(e, b);
     }
-    malla.appendChild(c);
-  });
+    return c;
 }
+
+/* ---------- Búsqueda por cargo ---------- */
+const sinTildes = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const clave = s => sinTildes(s).replace(/[^a-z0-9]/g, "").replace(/s$/, "");
+const raiz = s => clave(s).replace(/[ao]$/, "");   // administrativo = administrativa
+// distancia de edición con trasposición (para errores como Psicina / Piscina)
+function distancia(a, b){
+  if (Math.abs(a.length - b.length) > 1) return 9;
+  const d = [];
+  for (let i = 0; i <= a.length; i++) { d[i] = [i]; }
+  for (let j = 0; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+    const c = a[i-1] === b[j-1] ? 0 : 1;
+    d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + c);
+    if (i > 1 && j > 1 && a[i-1] === b[j-2] && a[i-2] === b[j-1]) d[i][j] = Math.min(d[i][j], d[i-2][j-2] + 1);
+  }
+  return d[a.length][b.length];
+}
+const parecido = (a, b) => a === b || (a.length >= 5 && b.length >= 5 && distancia(a, b) <= 1);
+const GENERICAS = new Set(["de","del","la","las","los","el","en","y","du","nord","dpto","dir","div","division","of","centro","general","restaurante","uninorte","universidad","norte"]);
+const fichas = s => sinTildes(s).split(/[^a-z0-9]+/).filter(x => x.length > 2 && !GENERICAS.has(x)).map(x => x.replace(/s$/, ""));
+
+// Matrices que corresponden a una tipología. Devuelve { lista, como }
+function matricesDeTipologia(tip, dep){
+  const rt = raiz(tip), ct = clave(tip), ft = fichas(tip);
+  const contiene = (fa, fb) => fa.length && fa.every(x => fb.some(y => parecido(x, y)));
+  let lista = datos.filter(d => parecido(raiz(d.nombre), rt) || (ct.length >= 6 && clave(d.nombre).includes(ct)) || contiene(ft, fichas(d.nombre)));
+  if (lista.length) return { lista, como: "tipologia" };
+  // Alimentos: la matriz es la del restaurante, que se deduce del departamento
+  const fd = clave(tip) === "alimento" ? fichas(dep) : [];
+  if (fd.length) {
+    lista = datos.filter(d => {
+      const fn = fichas(d.nombre);
+      return fd.every(x => fn.some(y => parecido(x, y)));
+    });
+    if (lista.length && lista.length <= 3) return { lista, como: "departamento" };
+  }
+  return { lista: [], como: "" };
+}
+
+function cambiarModo(m){
+  modo = m;
+  $("#modoArea").classList.toggle("on", m === "area");
+  $("#modoCargo").classList.toggle("on", m === "cargo");
+  $("#modoArea").setAttribute("aria-selected", m === "area");
+  $("#modoCargo").setAttribute("aria-selected", m === "cargo");
+  $("#panelArea").hidden = m !== "area";
+  $("#panelCargo").hidden = m !== "cargo";
+  if (m === "cargo") pintarCargo();
+}
+$("#modoArea").onclick = () => cambiarModo("area");
+$("#modoCargo").onclick = () => { cambiarModo("cargo"); setTimeout(() => { if (!selCargo) $("#qCargo").focus(); }, 30); };
+if (!CARGOS.length) $("#modos").hidden = true;
+
+function elegirDep(dep){ selDep = dep; selCargo = null; $("#qCargo").value = ""; pintarCargo(); $("#panelCargo").scrollIntoView({ block:"start", behavior:"smooth" }); setTimeout(() => $("#qCargo").focus({ preventScroll:true }), 30); }
+function elegirCargo(c){ selCargo = c; pintarCargo(); $("#panelCargo").scrollIntoView({ block:"start", behavior:"smooth" }); }
+function reiniciarCargo(){ selDep = null; selCargo = null; $("#qCargo").value = ""; pintarCargo(); $("#qCargo").focus(); }
+
+function miga(etiqueta, valor, alCambiar){
+  const m = document.createElement("div");
+  m.className = "miga";
+  m.innerHTML = '<span class="val"><small>' + esc(etiqueta) + '</small>' + esc(valor) + '</span>';
+  const b = document.createElement("button");
+  b.className = "btn btn-plano btn-xs"; b.textContent = "Cambiar";
+  b.onclick = alCambiar;
+  m.appendChild(b);
+  return m;
+}
+
+function opcion(texto, detalle, alElegir){
+  const b = document.createElement("button");
+  b.className = "opcion";
+  b.innerHTML = '<span>' + esc(texto) + '</span><small>' + esc(detalle) + '</small>';
+  b.onclick = alElegir;
+  return b;
+}
+
+function pintarCargo(){
+  if (modo !== "cargo") return;
+  const paso = selCargo ? 3 : selDep ? 2 : 1;
+  [1,2,3].forEach(n => {
+    $("#paso" + n).className = "paso" + (n === paso ? " activo" : n < paso ? " hecho" : "");
+  });
+
+  const migas = $("#migas");
+  migas.innerHTML = "";
+  if (selDep) migas.appendChild(miga("Departamento", selDep[0], reiniciarCargo));
+  if (selCargo) migas.appendChild(miga("Cargo", selCargo[0], () => { selCargo = null; $("#qCargo").value = ""; pintarCargo(); $("#qCargo").focus(); }));
+
+  const res = $("#resultadoCargo");
+  res.innerHTML = "";
+  $("#buscaCargo").hidden = paso === 3;
+
+  if (paso < 3) {
+    const q = sinTildes($("#qCargo").value.trim());
+    $("#limpiarCargo").className = "limpiar" + (q ? " ver" : "");
+    $("#qCargo").placeholder = paso === 1 ? "Escriba el nombre de su departamento…" : "Escriba su cargo…";
+    const ops = $("#opciones");
+    ops.innerHTML = "";
+    let lista;
+    if (paso === 1) {
+      lista = CARGOS.filter(x => sinTildes(x[0]).includes(q));
+      lista.forEach(x => ops.appendChild(opcion(x[0], x[1].length + (x[1].length === 1 ? " cargo" : " cargos"), () => elegirDep(x))));
+      $("#conteoCargo").innerHTML = "<b>" + lista.length + "</b> " + (lista.length === 1 ? "departamento" : "departamentos") + (q ? " encontrados" : "") + " · elija el suyo";
+    } else {
+      lista = selDep[1].filter(x => sinTildes(x[0]).includes(q));
+      lista.forEach(x => ops.appendChild(opcion(x[0], "›", () => elegirCargo(x))));
+      $("#conteoCargo").innerHTML = "<b>" + lista.length + "</b> " + (lista.length === 1 ? "cargo" : "cargos") + " en este departamento · elija el suyo";
+    }
+    if (!lista.length) {
+      ops.innerHTML = '<div class="vacio" style="padding:40px 20px"><span class="cara">🔍</span><h3>No encontramos ' +
+        (paso === 1 ? "ese departamento" : "ese cargo") + '</h3><p>Revise cómo lo escribió o consulte con el equipo de SST.</p></div>';
+    }
+    return;
+  }
+
+  // Paso 3: tipología y matriz
+  const tips = selCargo[1] || [];
+  const caja = document.createElement("div");
+  caja.className = "resultado";
+  if (!tips.length) {
+    caja.innerHTML = '<h3>Tipología de su matriz IPEVR</h3><p class="tipologia">Por definir</p>' +
+      '<p>Este cargo todavía no tiene una tipología asignada en el listado. Consulte con el equipo de SST.</p>';
+  } else {
+    caja.innerHTML = '<h3>Tipología de su matriz IPEVR</h3><p class="tipologia">' + tips.map(esc).join(" · ") + '</p>' +
+      (tips.length > 1
+        ? '<p>Este cargo aparece con ' + tips.length + ' tipologías en el listado. Consulte con el equipo de SST cuál aplica a su caso.</p>'
+        : '<p>' + esc(selCargo[0]) + ' · ' + esc(selDep[0]) + '</p>');
+  }
+  res.appendChild(caja);
+
+  tips.forEach(tip => {
+    const sub = document.createElement("p");
+    sub.className = "subtitulo-matriz";
+    sub.textContent = tips.length > 1 ? "Matriz " + tip : "Su matriz";
+    res.appendChild(sub);
+    const categoria = listaTipos().find(x => clave(x) === clave(tip));
+    const h = categoria ? { lista: [], como: "" } : matricesDeTipologia(tip, selDep[0]);
+    if (h.lista.length) {
+      if (h.como === "departamento") {
+        const n = document.createElement("p");
+        n.className = "conteo"; n.style.marginTop = "0";
+        n.textContent = "Matriz sugerida según su departamento.";
+        res.appendChild(n);
+      }
+      const m = document.createElement("div");
+      m.className = "malla"; m.style.paddingBottom = "0";
+      h.lista.forEach((d, i) => m.appendChild(crearCarta(d, i)));
+      res.appendChild(m);
+    } else if (categoria) {
+      const s = document.createElement("div");
+      s.className = "sin-matriz";
+      s.innerHTML = '<span>Hay varias matrices de tipo <b>' + esc(categoria) + '</b>. Busque la del espacio donde trabaja.</span>';
+      const b = document.createElement("button");
+      b.className = "btn btn-rojo btn-xs"; b.textContent = "Ver matrices de " + categoria.toLowerCase();
+      b.onclick = () => irAArea(tip);
+      s.appendChild(b);
+      res.appendChild(s);
+    } else {
+      const s = document.createElement("div");
+      s.className = "sin-matriz";
+      s.innerHTML = '<span>La matriz <b>' + esc(tip) + '</b> todavía no está cargada en el buscador. Consulte con el equipo de SST.</span>';
+      const b = document.createElement("button");
+      b.className = "btn btn-plano btn-xs"; b.textContent = "Ver el listado completo";
+      b.onclick = () => irAArea("");
+      s.appendChild(b);
+      res.appendChild(s);
+    }
+  });
+
+  const acc = document.createElement("div");
+  acc.className = "acciones-cargo";
+  const otro = document.createElement("button");
+  otro.className = "btn btn-plano"; otro.textContent = "Ver otro cargo";
+  otro.onclick = () => { selCargo = null; $("#qCargo").value = ""; pintarCargo(); $("#qCargo").focus(); };
+  const nuevo = document.createElement("button");
+  nuevo.className = "btn btn-plano"; nuevo.textContent = "Empezar de nuevo";
+  nuevo.onclick = reiniciarCargo;
+  acc.append(otro, nuevo);
+  res.appendChild(acc);
+}
+
+function irAArea(tip){
+  cambiarModo("area");
+  const t = tip ? listaTipos().find(x => clave(x) === clave(tip)) : null;
+  fEstado = "Todos";
+  if (t) { fTipo = t; $("#q").value = ""; }
+  else { fTipo = "Todos"; $("#q").value = tip; }
+  construirFiltros(); saludar(); pintar();
+  $("#herramientas").scrollIntoView({ block:"start", behavior:"smooth" });
+}
+
+$("#qCargo").addEventListener("input", pintarCargo);
+$("#qCargo").addEventListener("keydown", e => {
+  if (e.key !== "Enter") return;
+  const unicas = $("#opciones").querySelectorAll(".opcion");
+  if (unicas.length === 1) unicas[0].click();
+});
+$("#limpiarCargo").onclick = () => { $("#qCargo").value = ""; $("#qCargo").focus(); pintarCargo(); };
 
 /* ---------- Modo edición ---------- */
 function activarEdicion(){
@@ -1286,7 +1550,7 @@ document.querySelectorAll(".telon").forEach(m => m.onclick = e => { if (e.target
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") document.querySelectorAll(".telon.abierto").forEach(m => m.classList.remove("abierto"));
   if (e.key === "/" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") {
-    e.preventDefault(); $("#q").focus();
+    e.preventDefault(); $(modo === "cargo" && !selCargo ? "#qCargo" : "#q").focus();
   }
 });
 $("#q").addEventListener("input", pintar);
