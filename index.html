@@ -231,6 +231,15 @@ a.btn{text-decoration:none;display:inline-block}
 .temblar{animation:temblor .42s}
 @keyframes temblor{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
 
+.lista-tipos{list-style:none;margin:0 0 16px;padding:0;border:1px solid var(--linea);border-radius:12px;overflow:hidden}
+.lista-tipos li{display:flex;align-items:center;gap:10px;padding:10px 13px;border-top:1px solid var(--linea)}
+.lista-tipos li:first-child{border-top:0}
+.lista-tipos .nom{font-weight:700;flex:1;min-width:0;overflow-wrap:anywhere}
+.lista-tipos .cant{font-size:.8rem;color:var(--suave);white-space:nowrap}
+.lista-tipos .btn[disabled]{opacity:.38;cursor:not-allowed;filter:none}
+.fila-agregar{display:flex;gap:8px}
+.fila-agregar input{flex:1;min-width:0;padding:10px 12px;border:1.5px solid var(--linea);border-radius:10px;font-family:inherit;font-size:.93rem;background:var(--fondo);color:var(--texto)}
+.fila-agregar input:focus{outline:none;border-color:var(--rojo);box-shadow:0 0 0 3px rgba(203,51,59,.12)}
 footer{border-top:1px solid var(--linea);padding:24px 0 40px;color:var(--suave);font-size:.8rem}
 footer b{color:var(--texto)}
 
@@ -263,6 +272,7 @@ footer b{color:var(--texto)}
     <div class="barra-der">
       <span id="estado" class="local"><span class="punto"></span><span id="estado-txt">Conectando…</span></span>
       <button class="btn btn-fantasma btn-xs" id="btnModo">Modo edición</button>
+      <button class="btn btn-fantasma btn-xs" id="btnTipos" style="display:none">Tipos</button>
       <button class="btn btn-amarillo btn-xs" id="btnNueva" style="display:none">+ Nueva matriz</button>
       <button class="icono" id="btnTema" title="Cambiar entre modo claro y oscuro" aria-label="Cambiar tema">◐</button>
     </div>
@@ -276,7 +286,7 @@ footer b{color:var(--texto)}
 
     <div class="avance">
       <div class="avance-top">
-        <h2>Actualización de las matrices de la sede</h2>
+        <h2>Matrices IPEVR</h2>
         <span class="avance-cifra"><b id="cifraTotal">0</b> matrices · <b id="cifraAct">0</b> actualizadas</span>
       </div>
       <div class="riel"><i class="lleno" id="rielLleno"></i><i class="medio" id="rielMedio"></i></div>
@@ -334,6 +344,26 @@ footer b{color:var(--texto)}
     <div class="pie">
       <button class="btn btn-plano" data-cerrar>Cancelar</button>
       <button class="btn btn-rojo" id="btnEntrar">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal tipos -->
+<div class="telon" id="mTipos">
+  <div class="caja-modal angosta" id="cajaTipos">
+    <h2>Tipos de espacio</h2>
+    <p class="pie-txt">Solo se puede borrar un tipo cuando ninguna matriz lo está usando.</p>
+    <ul class="lista-tipos" id="listaTipos"></ul>
+    <div class="campo" style="margin-bottom:0">
+      <label for="nuevoTipo">Agregar un tipo</label>
+      <div class="fila-agregar">
+        <input type="text" id="nuevoTipo" placeholder="Ej. Taller, Oficina" maxlength="40">
+        <button class="btn btn-rojo" id="btnAgregarTipo">Agregar</button>
+      </div>
+    </div>
+    <p class="error" id="errTipos"></p>
+    <div class="pie">
+      <button class="btn btn-plano" data-cerrar>Cerrar</button>
     </div>
   </div>
 </div>
@@ -405,6 +435,7 @@ const BUCKET = CFG.bucket || "matrices";
 const MESES_LIMITE = CFG.mesesVigencia || 12;
 
 let sb = null, enLinea = false, edicion = false, datos = [], editandoId = null;
+let tiposDB = null; // lista de la tabla public.tipos; null si la tabla no existe
 let fTipo = "Todos", fEstado = "Todos";
 
 const $ = s => document.querySelector(s);
@@ -823,6 +854,7 @@ async function iniciar(){
     try {
       sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
       await cargar();
+      await cargarTipos();
       enLinea = true;
       suscribir();
       const { data } = await sb.auth.getSession();
@@ -837,6 +869,15 @@ async function iniciar(){
 
 function sinConexion(){ enLinea = false; sb = null; datos = BASE.map((d,i) => Object.assign({ id:"base"+i }, d)); }
 
+async function cargarTipos(){
+  if (!sb) { tiposDB = null; return; }
+  try {
+    const { data, error } = await sb.from("tipos").select("nombre").order("nombre");
+    if (error) throw error;
+    tiposDB = (data || []).map(x => x.nombre);
+  } catch(e) { console.warn("Tabla de tipos no disponible:", e.message || e); tiposDB = null; }
+}
+
 async function cargar(){
   const { data, error } = await sb.from(TABLA).select("*").order("nombre");
   if (error) throw error;
@@ -846,7 +887,10 @@ async function cargar(){
 function suscribir(){
   sb.channel("matrices-vivo")
     .on("postgres_changes", { event:"*", schema:"public", table:TABLA }, async () => {
-      try { await cargar(); saludar(); construirFiltros(); pintar(); } catch(e){ console.error(e); }
+      try { await cargar(); saludar(); construirFiltros(); pintar(); pintarTipos(); } catch(e){ console.error(e); }
+    })
+    .on("postgres_changes", { event:"*", schema:"public", table:"tipos" }, async () => {
+      try { await cargarTipos(); construirFiltros(); pintarTipos(); } catch(e){ console.error(e); }
     }).subscribe();
 }
 
@@ -865,7 +909,7 @@ function saludar(){
   const alDia = clases.filter(c => c === "f-ok").length;
   const porVencer = clases.filter(c => c === "f-pronto").length;
 
-  $("#saludo").innerHTML = txt + " 👋 Aquí puede consultar <span>su matriz de riesgo</span>";
+  $("#saludo").innerHTML = txt + " 👋 Aquí puede consultar <span>su matriz IPEVR</span>";
   $("#subSaludo").textContent = "Escriba el nombre del laboratorio o del ambiente donde trabaja y abra su matriz.";
 
   $("#cifraTotal").textContent = datos.length;
@@ -916,7 +960,7 @@ function clasificar(f){
 
 /* ---------- Filtros ---------- */
 function listaTipos(){
-  const s = new Set(["Laboratorio","Ambiente"]);
+  const s = new Set(tiposDB || ["Laboratorio","Ambiente"]);
   datos.forEach(d => { if (d.tipo && d.tipo.trim()) s.add(d.tipo.trim()); });
   return Array.from(s).sort((a,b) => a.localeCompare(b,"es"));
 }
@@ -932,7 +976,7 @@ function llenarTipos(actual){
   $("#f_tipo_nuevo").style.display = "none";
 }
 function construirFiltros(){
-  const tipos = listaTipos();
+  const tipos = listaTipos().filter(t => datos.some(d => d.tipo === t));
   if (fTipo !== "Todos" && tipos.indexOf(fTipo) === -1) fTipo = "Todos";
   chips("#fTipo", ["Todos"].concat(tipos), fTipo, v => { fTipo = v; construirFiltros(); pintar(); });
   chips("#fEstado", ["Todos","Publicada","Sin enlace","Pendiente"], fEstado, v => { fEstado = v; construirFiltros(); saludar(); pintar(); });
@@ -1048,6 +1092,7 @@ function activarEdicion(){
   edicion = true;
   $("#btnModo").textContent = "Salir de edición";
   $("#btnNueva").style.display = "inline-block";
+  $("#btnTipos").style.display = "inline-block";
   pintar();
 }
 async function salirEdicion(){
@@ -1055,6 +1100,8 @@ async function salirEdicion(){
   edicion = false;
   $("#btnModo").textContent = "Modo edición";
   $("#btnNueva").style.display = "none";
+  $("#btnTipos").style.display = "none";
+  cerrar("#mTipos");
   pintar();
 }
 $("#btnModo").onclick = () => {
@@ -1078,6 +1125,61 @@ $("#clave").addEventListener("keydown", e => { if (e.key === "Enter") $("#btnEnt
 
 /* ---------- Ficha ---------- */
 $("#btnNueva").onclick = () => abrirFicha(null);
+
+/* ---------- Tipos ---------- */
+$("#btnTipos").onclick = () => {
+  $("#nuevoTipo").value = "";
+  $("#errTipos").classList.remove("ver");
+  pintarTipos();
+  abrir("#mTipos");
+};
+function errorTipos(msg){
+  const err = $("#errTipos");
+  err.textContent = msg; err.classList.add("ver"); sacudir("#cajaTipos");
+}
+function pintarTipos(){
+  const ul = $("#listaTipos");
+  if (!ul) return;
+  ul.innerHTML = "";
+  if (!tiposDB) {
+    ul.innerHTML = '<li><span class="cant">La tabla de tipos no está creada en Supabase. Los tipos se toman de las matrices existentes.</span></li>';
+    $("#btnAgregarTipo").disabled = true;
+    return;
+  }
+  $("#btnAgregarTipo").disabled = false;
+  listaTipos().forEach(t => {
+    const n = datos.filter(d => d.tipo === t).length;
+    const li = document.createElement("li");
+    li.innerHTML = '<span class="nom">' + esc(t) + '</span><span class="cant">' +
+      (n === 0 ? "Sin matrices" : n === 1 ? "1 matriz" : n + " matrices") + '</span>';
+    const b = document.createElement("button");
+    b.className = "btn btn-peligro btn-xs"; b.textContent = "Borrar";
+    if (n > 0) { b.disabled = true; b.title = "No se puede borrar: hay matrices con este tipo. Cámbielas de tipo primero."; }
+    else b.onclick = () => borrarTipo(t);
+    li.appendChild(b);
+    ul.appendChild(li);
+  });
+}
+async function borrarTipo(t){
+  if (datos.some(d => d.tipo === t)) return errorTipos("Ese tipo todavía tiene matrices asignadas.");
+  if (!confirm('¿Borrar el tipo "' + t + '"?')) return;
+  const { error } = await sb.from("tipos").delete().eq("nombre", t);
+  if (error) return errorTipos("No se pudo borrar: " + error.message);
+  $("#errTipos").classList.remove("ver");
+  await cargarTipos(); construirFiltros(); pintarTipos();
+}
+$("#btnAgregarTipo").onclick = async () => {
+  let t = $("#nuevoTipo").value.trim().replace(/\s+/g, " ");
+  if (!t) { $("#nuevoTipo").focus(); return errorTipos("Escriba el nombre del tipo."); }
+  t = t.charAt(0).toUpperCase() + t.slice(1);
+  const ya = listaTipos().find(x => x.toLowerCase() === t.toLowerCase());
+  if (ya) return errorTipos('El tipo "' + ya + '" ya existe.');
+  const { error } = await sb.from("tipos").insert({ nombre: t });
+  if (error) return errorTipos("No se pudo agregar: " + error.message);
+  $("#nuevoTipo").value = ""; $("#errTipos").classList.remove("ver");
+  await cargarTipos(); construirFiltros(); pintarTipos();
+};
+$("#nuevoTipo").addEventListener("keydown", e => { if (e.key === "Enter") $("#btnAgregarTipo").click(); });
 
 $("#f_tipo").addEventListener("change", () => {
   const nuevo = $("#f_tipo").value === "__nuevo";
@@ -1146,12 +1248,16 @@ $("#btnGuardar").onclick = async () => {
       fila.archivo_nombre = archivo.name;
       fila.archivo_ruta = ruta;
     }
+    if (tiposDB && tiposDB.indexOf(fila.tipo) === -1) {
+      const t = await sb.from("tipos").upsert({ nombre: fila.tipo }, { onConflict: "nombre", ignoreDuplicates: true });
+      if (t.error) throw t.error;
+    }
     const res = editandoId
       ? await sb.from(TABLA).update(fila).eq("id", editandoId)
       : await sb.from(TABLA).insert(fila);
     if (res.error) throw res.error;
     cerrar("#mFicha");
-    await cargar(); saludar(); construirFiltros(); pintar();
+    await cargar(); await cargarTipos(); saludar(); construirFiltros(); pintar();
   } catch(e) {
     console.error(e);
     err.textContent = "No se pudo guardar: " + (e.message || "error desconocido");
