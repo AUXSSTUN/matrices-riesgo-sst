@@ -273,6 +273,7 @@ a.btn{text-decoration:none;display:inline-block}
 .subtitulo-matriz{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--suave);font-weight:700;margin:18px 0 10px}
 .sin-matriz{background:var(--panel);border:1px dashed var(--linea);border-radius:12px;padding:14px 16px;font-size:.9rem;color:var(--suave);display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between}
 .acciones-cargo{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+#resultadoCargo .malla,#resultadoCargo .sin-matriz{margin-bottom:8px}
 footer{border-top:1px solid var(--linea);padding:24px 0 40px;color:var(--suave);font-size:.8rem}
 footer b{color:var(--texto)}
 
@@ -1171,7 +1172,17 @@ function distancia(a, b){
 }
 const parecido = (a, b) => a === b || (a.length >= 5 && b.length >= 5 && distancia(a, b) <= 1);
 const GENERICAS = new Set(["de","del","la","las","los","el","en","y","du","nord","dpto","dir","div","division","of","centro","general","restaurante","uninorte","universidad","norte"]);
-const fichas = s => sinTildes(s).split(/[^a-z0-9]+/).filter(x => x.length > 2 && !GENERICAS.has(x)).map(x => x.replace(/s$/, ""));
+const esRestaurante = x => /^rest/.test(x) && x.length >= 8 && x.length <= 12;   // restaurante, restaunte, restaurnate…
+const fichas = s => sinTildes(s).split(/[^a-z0-9]+/).filter(x => x.length > 2 && !GENERICAS.has(x) && !esRestaurante(x)).map(x => x.replace(/s$/, ""));
+
+// Busca en el buscador la matriz que el listado de cargos nombra (tolera tildes y errores de escritura)
+function buscarMatriz(nombre){
+  const r = raiz(nombre), f = fichas(nombre);
+  const mismas = (a, b) => a.length && b.length && a.every(x => b.some(y => parecido(x, y))) && b.every(y => a.some(x => parecido(x, y)));
+  let lista = datos.filter(d => parecido(raiz(d.nombre), r));
+  if (!lista.length) lista = datos.filter(d => mismas(f, fichas(d.nombre)));
+  return lista.length <= 3 ? lista : [];
+}
 
 // Matrices que corresponden a una tipología. Devuelve { lista, como }
 function matricesDeTipologia(tip, dep){
@@ -1269,6 +1280,8 @@ function pintarCargo(){
 
   // Paso 3: tipología y matriz
   const tips = selCargo[1] || [];
+  const principales = selCargo[2] || [];
+  const otras = selCargo[3] || [];
   const caja = document.createElement("div");
   caja.className = "resultado";
   if (!tips.length) {
@@ -1276,50 +1289,60 @@ function pintarCargo(){
       '<p>Este cargo todavía no tiene una tipología asignada en el listado. Consulte con el equipo de SST.</p>';
   } else {
     caja.innerHTML = '<h3>Tipología de su matriz IPEVR</h3><p class="tipologia">' + tips.map(esc).join(" · ") + '</p>' +
-      (tips.length > 1
-        ? '<p>Este cargo aparece con ' + tips.length + ' tipologías en el listado. Consulte con el equipo de SST cuál aplica a su caso.</p>'
-        : '<p>' + esc(selCargo[0]) + ' · ' + esc(selDep[0]) + '</p>');
+      '<p>' + esc(selCargo[0]) + ' · ' + esc(selDep[0]) + '</p>';
   }
   res.appendChild(caja);
 
-  tips.forEach(tip => {
+  const titulo = txt => {
     const sub = document.createElement("p");
-    sub.className = "subtitulo-matriz";
-    sub.textContent = tips.length > 1 ? "Matriz " + tip : "Su matriz";
+    sub.className = "subtitulo-matriz"; sub.textContent = txt;
     res.appendChild(sub);
-    const categoria = listaTipos().find(x => clave(x) === clave(tip));
-    const h = categoria ? { lista: [], como: "" } : matricesDeTipologia(tip, selDep[0]);
-    if (h.lista.length) {
-      if (h.como === "departamento") {
-        const n = document.createElement("p");
-        n.className = "conteo"; n.style.marginTop = "0";
-        n.textContent = "Matriz sugerida según su departamento.";
-        res.appendChild(n);
-      }
-      const m = document.createElement("div");
-      m.className = "malla"; m.style.paddingBottom = "0";
-      h.lista.forEach((d, i) => m.appendChild(crearCarta(d, i)));
-      res.appendChild(m);
-    } else if (categoria) {
-      const s = document.createElement("div");
-      s.className = "sin-matriz";
-      s.innerHTML = '<span>Hay varias matrices de tipo <b>' + esc(categoria) + '</b>. Busque la del espacio donde trabaja.</span>';
+  };
+  const tarjetas = lista => {
+    const m = document.createElement("div");
+    m.className = "malla"; m.style.paddingBottom = "0";
+    lista.forEach((d, i) => m.appendChild(crearCarta(d, i)));
+    res.appendChild(m);
+  };
+  const aviso = (html, boton, alClic, rojo) => {
+    const s = document.createElement("div");
+    s.className = "sin-matriz";
+    s.innerHTML = '<span>' + html + '</span>';
+    if (boton) {
       const b = document.createElement("button");
-      b.className = "btn btn-rojo btn-xs"; b.textContent = "Ver matrices de " + categoria.toLowerCase();
-      b.onclick = () => irAArea(tip);
+      b.className = "btn btn-xs " + (rojo ? "btn-rojo" : "btn-plano"); b.textContent = boton;
+      b.onclick = alClic;
       s.appendChild(b);
-      res.appendChild(s);
-    } else {
-      const s = document.createElement("div");
-      s.className = "sin-matriz";
-      s.innerHTML = '<span>La matriz <b>' + esc(tip) + '</b> todavía no está cargada en el buscador. Consulte con el equipo de SST.</span>';
-      const b = document.createElement("button");
-      b.className = "btn btn-plano btn-xs"; b.textContent = "Ver el listado completo";
-      b.onclick = () => irAArea("");
-      s.appendChild(b);
-      res.appendChild(s);
     }
-  });
+    res.appendChild(s);
+  };
+  const mostrarMatriz = nombre => {
+    const lista = buscarMatriz(nombre);
+    if (lista.length) tarjetas(lista);
+    else aviso('La matriz <b>' + esc(nombre) + '</b> todavía no está cargada en el buscador. Consulte con el equipo de SST.');
+  };
+
+  // Matriz principal
+  titulo(otras.length ? "Su matriz principal" : "Su matriz");
+  if (principales.length) {
+    principales.forEach(mostrarMatriz);
+  } else {
+    // El listado no nombra una matriz: se busca por la tipología
+    const tip = tips[0];
+    const categoria = tip ? listaTipos().find(x => clave(x) === clave(tip)) : null;
+    const h = (tip && !categoria) ? matricesDeTipologia(tip, selDep[0]) : { lista: [] };
+    if (h.lista.length) tarjetas(h.lista);
+    else if (categoria) aviso('Hay varias matrices de tipo <b>' + esc(categoria) + '</b>. Busque la del espacio donde trabaja.',
+      "Ver matrices de " + categoria.toLowerCase(), () => irAArea(tip), true);
+    else aviso('Su matriz todavía no está asignada en el listado de cargos. Consulte con el equipo de SST.',
+      "Ver el listado completo", () => irAArea(""));
+  }
+
+  // Otras matrices de interés
+  if (otras.length) {
+    titulo(otras.length === 1 ? "También es de su interés" : "También son de su interés");
+    otras.forEach(mostrarMatriz);
+  }
 
   const acc = document.createElement("div");
   acc.className = "acciones-cargo";
