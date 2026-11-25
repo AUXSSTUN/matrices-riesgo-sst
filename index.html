@@ -274,6 +274,42 @@ a.btn{text-decoration:none;display:inline-block}
 .sin-matriz{background:var(--panel);border:1px dashed var(--linea);border-radius:12px;padding:14px 16px;font-size:.9rem;color:var(--suave);display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between}
 .acciones-cargo{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
 #resultadoCargo .malla,#resultadoCargo .sin-matriz{margin-bottom:8px}
+/* ---------- Solo en modo edición ---------- */
+body:not(.editando) .solo-edicion{display:none!important}
+
+/* ---------- Aviso actualizar matriz ---------- */
+.aviso-actualizar{margin:10px 0 34px}
+.aviso-fila{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:var(--panel);
+  border:1.5px solid rgba(255,205,0,.75);border-left:6px solid var(--amarillo);border-radius:var(--r);
+  padding:16px 20px;box-shadow:var(--sombra)}
+.aviso-fila .btn{font-size:.95rem;padding:12px 20px;flex:none;box-shadow:0 4px 14px -6px rgba(181,127,0,.7)}
+.aviso-txt{flex:1;min-width:240px;display:flex;gap:12px;align-items:flex-start}
+.aviso-icono{font-size:1.5rem;line-height:1;animation:llamar 2.4s ease-in-out infinite;flex:none}
+@keyframes llamar{0%,70%,100%{transform:none}78%{transform:rotate(-12deg) scale(1.1)}86%{transform:rotate(10deg) scale(1.1)}94%{transform:rotate(-6deg)}}
+.aviso-txt b{display:block;font-size:1rem;margin-bottom:2px}
+.aviso-txt span.t{font-size:.9rem;color:var(--suave)}
+.oculto-bot{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.listo{text-align:center;padding:10px 0 4px}
+.listo .cara{font-size:2.6rem;display:block;margin-bottom:8px}
+.listo h3{margin:0 0 6px;font-size:1.1rem}
+.listo p{margin:0;color:var(--suave);font-size:.92rem}
+.nota-datos{font-size:.75rem;color:var(--suave);margin:4px 0 0}
+.insignia{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:999px;
+  background:var(--amarillo);color:#2e2300;font-size:.7rem;font-weight:800;margin-left:6px;vertical-align:middle}
+.solicitud{border:1px solid var(--linea);border-radius:12px;padding:13px 15px;margin-bottom:10px;background:var(--fondo)}
+.solicitud.atendida{opacity:.62}
+.solicitud .cab{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.solicitud .cab .fecha{margin-left:auto;font-size:.75rem;color:var(--suave)}
+.solicitud .quien{font-weight:700;font-size:.92rem}
+.solicitud .det{font-size:.84rem;color:var(--suave);margin:2px 0}
+.solicitud .desc{font-size:.88rem;margin:8px 0 10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.chip-motivo{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:4px 9px;border-radius:7px;background:var(--rojo);color:#fff}
+.chip-estado{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:4px 9px;border-radius:7px;background:var(--linea);color:var(--suave)}
+.solicitud.pendiente .chip-estado{background:var(--amarillo);color:#2e2300}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:80;
+  background:var(--negro);color:#fff;padding:12px 18px;border-radius:12px;font-size:.9rem;font-weight:600;
+  box-shadow:0 12px 30px -10px rgba(0,0,0,.5);transition:opacity .25s,transform .25s;pointer-events:none;max-width:calc(100% - 32px)}
+.toast.ver{opacity:1;transform:translateX(-50%)}
 footer{border-top:1px solid var(--linea);padding:24px 0 40px;color:var(--suave);font-size:.8rem}
 footer b{color:var(--texto)}
 
@@ -306,6 +342,7 @@ footer b{color:var(--texto)}
     <div class="barra-der">
       <span id="estado" class="local"><span class="punto"></span><span id="estado-txt">Conectando…</span></span>
       <button class="btn btn-fantasma btn-xs" id="btnModo">Modo edición</button>
+      <button class="btn btn-fantasma btn-xs" id="btnSolicitudes" style="display:none">Solicitudes<span class="insignia" id="insigniaSol" hidden>0</span></button>
       <button class="btn btn-fantasma btn-xs" id="btnTipos" style="display:none">Tipos</button>
       <button class="btn btn-amarillo btn-xs" id="btnNueva" style="display:none">+ Nueva matriz</button>
       <button class="icono" id="btnTema" title="Cambiar entre modo claro y oscuro" aria-label="Cambiar tema">◐</button>
@@ -318,7 +355,7 @@ footer b{color:var(--texto)}
     <h1 class="saludo negra" id="saludo">Hola</h1>
     <p class="sub-saludo" id="subSaludo"></p>
 
-    <div class="avance">
+    <div class="avance solo-edicion">
       <div class="avance-top">
         <h2>Matrices IPEVR</h2>
         <span class="avance-cifra"><b id="cifraTotal">0</b> matrices · <b id="cifraAct">0</b> actualizadas</span>
@@ -331,7 +368,7 @@ footer b{color:var(--texto)}
       </div>
     </div>
 
-    <div class="fichas" id="fichas"></div>
+    <div class="fichas solo-edicion" id="fichas"></div>
   </section>
 
   <div class="modos" role="tablist" aria-label="Forma de búsqueda" id="modos">
@@ -341,9 +378,10 @@ footer b{color:var(--texto)}
 
   <section class="panel-cargo" id="panelCargo" hidden>
     <ol class="pasos">
-      <li class="paso" id="paso1"><span>1</span>Departamento</li>
-      <li class="paso" id="paso2"><span>2</span>Cargo</li>
-      <li class="paso" id="paso3"><span>3</span>Tipología de matriz</li>
+      <li class="paso" id="paso1"><span>1</span>Sede</li>
+      <li class="paso" id="paso2"><span>2</span>Departamento</li>
+      <li class="paso" id="paso3"><span>3</span>Cargo</li>
+      <li class="paso" id="paso4"><span>4</span>Tipología de matriz</li>
     </ol>
     <div class="migas" id="migas"></div>
     <div id="buscaCargo">
@@ -384,6 +422,21 @@ footer b{color:var(--texto)}
   </div>
 </main>
 
+<section class="aviso-actualizar">
+  <div class="caja">
+    <div class="aviso-fila">
+      <button class="btn btn-amarillo" id="btnSolicitud">Actualizar matriz</button>
+      <div class="aviso-txt">
+        <span class="aviso-icono" aria-hidden="true">🔔</span>
+        <div>
+          <b>¿Su matriz necesita un cambio o una actualización?</b>
+          <span class="t">Si hubo un cambio de proceso, llegó maquinaria nueva u ocurrió un accidente, presione <b style="display:inline">Actualizar matriz</b> y el equipo de SST recibirá el aviso.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <footer>
   <div class="caja">
     <p style="margin:0 0 5px">La identificación de peligros y la valoración de riesgos <b>se actualiza como mínimo una vez al año</b>, y cada vez que cambie un proceso, se incorpore maquinaria nueva o ocurra un accidente. Las fichas en rojo llevan más de 12 meses sin actualizar.</p>
@@ -407,6 +460,67 @@ footer b{color:var(--texto)}
     </div>
   </div>
 </div>
+
+<!-- Modal solicitud de actualización -->
+<div class="telon" id="mSolicitud">
+  <div class="caja-modal" id="cajaSolicitud">
+    <div id="formSolicitud">
+      <h2>Solicitar actualización de matriz</h2>
+      <p class="pie-txt">Cuéntenos qué cambió. El equipo de SST recibirá el aviso y revisará la matriz.</p>
+      <div class="dos">
+        <div class="campo"><label for="s_nombre">Nombre completo *</label><input type="text" id="s_nombre" maxlength="120" autocomplete="name"></div>
+        <div class="campo"><label for="s_contacto">Correo o extensión *</label><input type="text" id="s_contacto" maxlength="120" autocomplete="email" placeholder="usuario@uninorte.edu.co"></div>
+      </div>
+      <div class="dos">
+        <div class="campo"><label for="s_sede">Sede</label><select id="s_sede"></select></div>
+        <div class="campo"><label for="s_area">Departamento o área *</label><input type="text" id="s_area" maxlength="160"></div>
+      </div>
+      <div class="dos">
+        <div class="campo"><label for="s_cargo">Cargo</label><input type="text" id="s_cargo" maxlength="160"></div>
+        <div class="campo"><label for="s_matriz">Matriz que necesita el cambio</label><input type="text" id="s_matriz" maxlength="160" list="listaMatrices" placeholder="Si no la sabe, déjelo vacío"><datalist id="listaMatrices"></datalist></div>
+      </div>
+      <div class="campo">
+        <label for="s_motivo">Motivo *</label>
+        <select id="s_motivo">
+          <option value="">Elija una opción…</option>
+          <option>Cambio de proceso</option>
+          <option>Maquinaria o equipo nuevo</option>
+          <option>Ocurrió un accidente o incidente</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div class="campo"><label for="s_desc">¿Qué cambió? *</label><textarea id="s_desc" maxlength="2000" placeholder="Describa brevemente el cambio, dónde ocurrió y desde cuándo."></textarea></div>
+      <div class="oculto-bot" aria-hidden="true"><label for="s_web">No llenar</label><input type="text" id="s_web" tabindex="-1" autocomplete="off"></div>
+      <p class="nota-datos">Sus datos solo se usan para atender esta solicitud (Ley 1581 de 2012).</p>
+      <p class="error" id="errSolicitud"></p>
+      <div class="pie">
+        <button class="btn btn-plano" data-cerrar>Cancelar</button>
+        <button class="btn btn-rojo" id="btnEnviarSolicitud">Enviar solicitud</button>
+      </div>
+    </div>
+    <div id="listoSolicitud" hidden>
+      <div class="listo">
+        <span class="cara">✅</span>
+        <h3>Solicitud enviada</h3>
+        <p>El equipo de SST recibió su aviso y revisará la matriz. Si necesita más información, le contactará.</p>
+      </div>
+      <div class="pie" style="justify-content:center"><button class="btn btn-rojo" data-cerrar>Cerrar</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal solicitudes (editores) -->
+<div class="telon" id="mSolicitudes">
+  <div class="caja-modal" id="cajaSolicitudes">
+    <h2>Solicitudes de actualización</h2>
+    <p class="pie-txt" id="resumenSol">Avisos enviados desde el botón «Actualizar matriz».</p>
+    <div id="listaSol"></div>
+    <p class="error" id="errSol"></p>
+    <div class="pie"><button class="btn btn-plano" data-cerrar>Cerrar</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Modal tipos -->
 <div class="telon" id="mTipos">
@@ -496,8 +610,13 @@ const BUCKET = CFG.bucket || "matrices";
 const MESES_LIMITE = CFG.mesesVigencia || 12;
 
 let sb = null, enLinea = false, edicion = false, datos = [], editandoId = null;
-let modo = "area", selDep = null, selCargo = null;
+let modo = "area", selSede = null, selDep = null, selCargo = null;
 const CARGOS = Array.isArray(window.CARGOS) ? window.CARGOS : [];
+const SEDE_BASE = "Campus Uninorte";
+const SEDES = (Array.isArray(window.SEDES) && window.SEDES.length) ? window.SEDES : [SEDE_BASE];
+const sedeDe = d => d[2] || SEDE_BASE;
+const depsDe = s => CARGOS.filter(d => sedeDe(d) === s);
+let solicitudes = null; // null = tabla no disponible
 let tiposDB = null; // lista de la tabla public.tipos; null si la tabla no existe
 let fTipo = "Todos", fEstado = "Todos";
 
@@ -954,6 +1073,11 @@ function suscribir(){
     })
     .on("postgres_changes", { event:"*", schema:"public", table:"tipos" }, async () => {
       try { await cargarTipos(); construirFiltros(); pintarTipos(); } catch(e){ console.error(e); }
+    })
+    .on("postgres_changes", { event:"*", schema:"public", table:"solicitudes" }, async (p) => {
+      if (!edicion) return;
+      if (p && p.eventType === "INSERT") aviso("🔔 Llegó una nueva solicitud de actualización de matriz");
+      cargarSolicitudes();
     }).subscribe();
 }
 
@@ -1216,9 +1340,21 @@ $("#modoArea").onclick = () => cambiarModo("area");
 $("#modoCargo").onclick = () => { cambiarModo("cargo"); setTimeout(() => { if (!selCargo) $("#qCargo").focus(); }, 30); };
 if (!CARGOS.length) $("#modos").hidden = true;
 
+function elegirSede(s){
+  selSede = s; selDep = null; selCargo = null; $("#qCargo").value = "";
+  const deps = depsDe(s);
+  if (deps.length === 1) selDep = deps[0];      // una sola área: se salta el paso
+  pintarCargo(); $("#panelCargo").scrollIntoView({ block:"start", behavior:"smooth" });
+  setTimeout(() => $("#qCargo").focus({ preventScroll:true }), 30);
+}
 function elegirDep(dep){ selDep = dep; selCargo = null; $("#qCargo").value = ""; pintarCargo(); $("#panelCargo").scrollIntoView({ block:"start", behavior:"smooth" }); setTimeout(() => $("#qCargo").focus({ preventScroll:true }), 30); }
 function elegirCargo(c){ selCargo = c; pintarCargo(); $("#panelCargo").scrollIntoView({ block:"start", behavior:"smooth" }); }
-function reiniciarCargo(){ selDep = null; selCargo = null; $("#qCargo").value = ""; pintarCargo(); $("#qCargo").focus(); }
+function reiniciarCargo(){ selSede = null; selDep = null; selCargo = null; $("#qCargo").value = ""; pintarCargo(); }
+function volverADep(){
+  selCargo = null; $("#qCargo").value = "";
+  if (depsDe(selSede).length <= 1) selSede = null, selDep = null; else selDep = null;
+  pintarCargo(); $("#qCargo").focus();
+}
 
 function miga(etiqueta, valor, alCambiar){
   const m = document.createElement("div");
@@ -1241,29 +1377,46 @@ function opcion(texto, detalle, alElegir){
 
 function pintarCargo(){
   if (modo !== "cargo") return;
-  const paso = selCargo ? 3 : selDep ? 2 : 1;
-  [1,2,3].forEach(n => {
+  const paso = selCargo ? 4 : selDep ? 3 : selSede ? 2 : 1;
+  [1,2,3,4].forEach(n => {
     $("#paso" + n).className = "paso" + (n === paso ? " activo" : n < paso ? " hecho" : "");
   });
 
   const migas = $("#migas");
   migas.innerHTML = "";
-  if (selDep) migas.appendChild(miga("Departamento", selDep[0], reiniciarCargo));
+  if (selSede) migas.appendChild(miga("Sede", selSede, reiniciarCargo));
+  if (selDep) migas.appendChild(miga("Departamento", selDep[0], volverADep));
   if (selCargo) migas.appendChild(miga("Cargo", selCargo[0], () => { selCargo = null; $("#qCargo").value = ""; pintarCargo(); $("#qCargo").focus(); }));
 
   const res = $("#resultadoCargo");
   res.innerHTML = "";
-  $("#buscaCargo").hidden = paso === 3;
+  $("#buscaCargo").hidden = paso === 4;
 
-  if (paso < 3) {
-    const q = sinTildes($("#qCargo").value.trim());
-    $("#limpiarCargo").className = "limpiar" + (q ? " ver" : "");
-    $("#qCargo").placeholder = paso === 1 ? "Escriba el nombre de su departamento…" : "Escriba su cargo…";
+  if (paso < 4) {
     const ops = $("#opciones");
     ops.innerHTML = "";
-    let lista;
+    $("#buscaCargo .buscar").hidden = paso === 1;
     if (paso === 1) {
-      lista = CARGOS.filter(x => sinTildes(x[0]).includes(q));
+      SEDES.forEach(s => {
+        const n = depsDe(s).length;
+        ops.appendChild(opcion(s, n ? n + (n === 1 ? " departamento" : " departamentos") : "Próximamente", () => elegirSede(s)));
+      });
+      $("#conteoCargo").innerHTML = "¿En qué sede trabaja? Elija una opción.";
+      return;
+    }
+    const q = sinTildes($("#qCargo").value.trim());
+    $("#limpiarCargo").className = "limpiar" + (q ? " ver" : "");
+    $("#qCargo").placeholder = paso === 2 ? "Escriba el nombre de su departamento…" : "Escriba su cargo…";
+    let lista;
+    if (paso === 2) {
+      const deps = depsDe(selSede);
+      if (!deps.length) {
+        $("#buscaCargo .buscar").hidden = true;
+        $("#conteoCargo").innerHTML = "";
+        ops.innerHTML = '<div class="vacio" style="padding:40px 20px"><span class="cara">🗂️</span><h3>Todavía no hay cargos cargados para esta sede</h3><p>Pronto estarán disponibles. Mientras tanto, consulte con el equipo de SST.</p></div>';
+        return;
+      }
+      lista = deps.filter(x => sinTildes(x[0]).includes(q));
       lista.forEach(x => ops.appendChild(opcion(x[0], x[1].length + (x[1].length === 1 ? " cargo" : " cargos"), () => elegirDep(x))));
       $("#conteoCargo").innerHTML = "<b>" + lista.length + "</b> " + (lista.length === 1 ? "departamento" : "departamentos") + (q ? " encontrados" : "") + " · elija el suyo";
     } else {
@@ -1273,7 +1426,7 @@ function pintarCargo(){
     }
     if (!lista.length) {
       ops.innerHTML = '<div class="vacio" style="padding:40px 20px"><span class="cara">🔍</span><h3>No encontramos ' +
-        (paso === 1 ? "ese departamento" : "ese cargo") + '</h3><p>Revise cómo lo escribió o consulte con el equipo de SST.</p></div>';
+        (paso === 2 ? "ese departamento" : "ese cargo") + '</h3><p>Revise cómo lo escribió o consulte con el equipo de SST.</p></div>';
     }
     return;
   }
@@ -1352,7 +1505,10 @@ function pintarCargo(){
   const nuevo = document.createElement("button");
   nuevo.className = "btn btn-plano"; nuevo.textContent = "Empezar de nuevo";
   nuevo.onclick = reiniciarCargo;
-  acc.append(otro, nuevo);
+  const pedir = document.createElement("button");
+  pedir.className = "btn btn-amarillo"; pedir.textContent = "Solicitar actualización de mi matriz";
+  pedir.onclick = abrirSolicitud;
+  acc.append(otro, nuevo, pedir);
   res.appendChild(acc);
 }
 
@@ -1380,6 +1536,9 @@ function activarEdicion(){
   $("#btnModo").textContent = "Salir de edición";
   $("#btnNueva").style.display = "inline-block";
   $("#btnTipos").style.display = "inline-block";
+  $("#btnSolicitudes").style.display = "inline-block";
+  document.body.classList.add("editando");
+  cargarSolicitudes();
   pintar();
 }
 async function salirEdicion(){
@@ -1388,6 +1547,9 @@ async function salirEdicion(){
   $("#btnModo").textContent = "Modo edición";
   $("#btnNueva").style.display = "none";
   $("#btnTipos").style.display = "none";
+  $("#btnSolicitudes").style.display = "none";
+  document.body.classList.remove("editando");
+  solicitudes = null; cerrar("#mSolicitudes");
   cerrar("#mTipos");
   pintar();
 }
@@ -1412,6 +1574,123 @@ $("#clave").addEventListener("keydown", e => { if (e.key === "Enter") $("#btnEnt
 
 /* ---------- Ficha ---------- */
 $("#btnNueva").onclick = () => abrirFicha(null);
+
+/* ---------- Solicitudes de actualización ---------- */
+let temporizadorAviso = null;
+function aviso(txt){
+  const el = $("#toast");
+  el.textContent = txt; el.classList.add("ver");
+  clearTimeout(temporizadorAviso);
+  temporizadorAviso = setTimeout(() => el.classList.remove("ver"), 4200);
+}
+
+function abrirSolicitud(){
+  $("#formSolicitud").hidden = false;
+  $("#listoSolicitud").hidden = true;
+  $("#errSolicitud").classList.remove("ver");
+  const sel = $("#s_sede");
+  sel.innerHTML = "";
+  SEDES.forEach(s => { const o = document.createElement("option"); o.value = o.textContent = s; sel.appendChild(o); });
+  const dl = $("#listaMatrices");
+  dl.innerHTML = "";
+  Array.from(new Set(datos.map(d => d.nombre))).sort((a,b) => a.localeCompare(b,"es"))
+    .forEach(n => { const o = document.createElement("option"); o.value = n; dl.appendChild(o); });
+  // Si viene de la búsqueda por cargo, se llena lo que ya sabemos
+  sel.value = selSede || SEDE_BASE;
+  if (modo === "cargo" && selDep) $("#s_area").value = selDep[0];
+  if (modo === "cargo" && selCargo) {
+    $("#s_cargo").value = selCargo[0];
+    const p = (selCargo[2] || [])[0];
+    if (p) { const m = buscarMatriz(p)[0]; $("#s_matriz").value = m ? m.nombre : p; }
+  }
+  abrir("#mSolicitud");
+  setTimeout(() => $(($("#s_nombre").value ? "#s_desc" : "#s_nombre")).focus(), 60);
+}
+$("#btnSolicitud").onclick = abrirSolicitud;
+["#s_nombre","#s_contacto","#s_area","#s_motivo","#s_desc"].forEach(id => $(id).addEventListener("input", () => $("#errSolicitud").classList.remove("ver")));
+
+$("#btnEnviarSolicitud").onclick = async () => {
+  const err = $("#errSolicitud");
+  const v = id => $(id).value.trim();
+  const falta = (id, msg) => { err.textContent = msg; err.classList.add("ver"); sacudir("#cajaSolicitud"); $(id).focus(); };
+  if (v("#s_web")) return;                                   // relleno automático de robots
+  if (v("#s_nombre").length < 2) return falta("#s_nombre", "Escriba su nombre completo.");
+  if (v("#s_contacto").length < 3) return falta("#s_contacto", "Escriba un correo o una extensión para contactarle.");
+  if (!v("#s_area")) return falta("#s_area", "Escriba su departamento o área.");
+  if (!v("#s_motivo")) return falta("#s_motivo", "Elija el motivo de la solicitud.");
+  if (v("#s_desc").length < 5) return falta("#s_desc", "Cuéntenos brevemente qué cambió.");
+  if (!sb) return falta("#s_desc", "La página está sin conexión. Intente más tarde o comuníquese con el equipo de SST.");
+  const btn = $("#btnEnviarSolicitud");
+  btn.disabled = true; btn.textContent = "Enviando…";
+  try {
+    const { error } = await sb.from("solicitudes").insert({
+      nombre: v("#s_nombre"), contacto: v("#s_contacto"), sede: v("#s_sede") || null,
+      area: v("#s_area"), cargo: v("#s_cargo") || null, matriz: v("#s_matriz") || null,
+      motivo: v("#s_motivo"), descripcion: v("#s_desc")
+    });
+    if (error) throw error;
+    ["#s_desc","#s_motivo"].forEach(id => $(id).value = "");
+    $("#formSolicitud").hidden = true;
+    $("#listoSolicitud").hidden = false;
+  } catch(e) {
+    console.error(e);
+    falta("#s_desc", "No se pudo enviar la solicitud. Intente de nuevo o comuníquese con el equipo de SST.");
+  } finally {
+    btn.disabled = false; btn.textContent = "Enviar solicitud";
+  }
+};
+
+async function cargarSolicitudes(){
+  if (!sb || !edicion) return;
+  try {
+    const { data, error } = await sb.from("solicitudes").select("*").order("creado_en", { ascending:false });
+    if (error) throw error;
+    solicitudes = data || [];
+  } catch(e) { console.warn("Tabla de solicitudes no disponible:", e.message || e); solicitudes = null; }
+  pintarSolicitudes();
+}
+
+function pintarSolicitudes(){
+  const pend = solicitudes ? solicitudes.filter(s => s.estado !== "Atendida").length : 0;
+  const ins = $("#insigniaSol");
+  ins.textContent = pend; ins.hidden = !pend;
+  const lista = $("#listaSol");
+  if (!lista) return;
+  lista.innerHTML = "";
+  if (!solicitudes) {
+    $("#resumenSol").textContent = "La tabla de solicitudes todavía no está creada en Supabase.";
+    return;
+  }
+  $("#resumenSol").textContent = solicitudes.length
+    ? pend + (pend === 1 ? " pendiente" : " pendientes") + " de " + solicitudes.length + " en total."
+    : "Todavía no ha llegado ninguna solicitud.";
+  const orden = solicitudes.slice().sort((a,b) => (a.estado === "Atendida") - (b.estado === "Atendida"));
+  orden.forEach(s => {
+    const atendida = s.estado === "Atendida";
+    const c = document.createElement("div");
+    c.className = "solicitud " + (atendida ? "atendida" : "pendiente");
+    const f = new Date(s.creado_en);
+    const fecha = isNaN(f) ? "" : f.toLocaleDateString("es-CO", { day:"numeric", month:"short", year:"numeric" }) + " · " + f.toLocaleTimeString("es-CO", { hour:"numeric", minute:"2-digit" });
+    c.innerHTML =
+      '<div class="cab"><span class="chip-motivo">' + esc(s.motivo) + '</span><span class="chip-estado">' + esc(s.estado || "Pendiente") + '</span><span class="fecha">' + esc(fecha) + '</span></div>' +
+      '<div class="quien">' + esc(s.nombre) + ' · <span class="mono" style="font-weight:500">' + esc(s.contacto) + '</span></div>' +
+      '<div class="det">' + [s.sede, s.area, s.cargo].filter(Boolean).map(esc).join(" · ") + '</div>' +
+      (s.matriz ? '<div class="det">Matriz: <b>' + esc(s.matriz) + '</b></div>' : '') +
+      '<p class="desc">' + esc(s.descripcion) + '</p>';
+    const b = document.createElement("button");
+    b.className = "btn btn-xs " + (atendida ? "btn-plano" : "btn-rojo");
+    b.textContent = atendida ? "Volver a pendiente" : "Marcar como atendida";
+    b.onclick = async () => {
+      b.disabled = true;
+      const { error } = await sb.from("solicitudes").update({ estado: atendida ? "Pendiente" : "Atendida" }).eq("id", s.id);
+      if (error) { const e = $("#errSol"); e.textContent = "No se pudo actualizar: " + error.message; e.classList.add("ver"); b.disabled = false; return; }
+      cargarSolicitudes();
+    };
+    c.appendChild(b);
+    lista.appendChild(c);
+  });
+}
+$("#btnSolicitudes").onclick = () => { $("#errSol").classList.remove("ver"); pintarSolicitudes(); abrir("#mSolicitudes"); cargarSolicitudes(); };
 
 /* ---------- Tipos ---------- */
 $("#btnTipos").onclick = () => {
@@ -1573,7 +1852,7 @@ document.querySelectorAll(".telon").forEach(m => m.onclick = e => { if (e.target
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") document.querySelectorAll(".telon.abierto").forEach(m => m.classList.remove("abierto"));
   if (e.key === "/" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") {
-    e.preventDefault(); $(modo === "cargo" && !selCargo ? "#qCargo" : "#q").focus();
+    e.preventDefault(); $(modo === "cargo" && selSede && !selCargo ? "#qCargo" : "#q").focus();
   }
 });
 $("#q").addEventListener("input", pintar);
